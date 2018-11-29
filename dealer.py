@@ -21,6 +21,21 @@ print("Player 2 Cards")
 for cards in player2_hand:
     print(Card.int_to_pretty_str(cards))
 evaluator = Evaluator()
+all_card_array=np.zeros((4,13))
+
+
+def convert_pot_to_numpy(total_pot):
+    pot_array = np.zeros((4, 13))
+    number_of_chips = int(total_pot/25)
+    if number_of_chips > 13:
+        pot_array[1] = 1
+        left_over_chips = number_of_chips-13
+        for i in range(0,left_over_chips):
+            pot_array[2][i] = 1
+    else:
+        for i in range(0,number_of_chips):
+            pot_array[1][i] = 1
+    return pot_array
 
 
 def convert_to_numpy_array(Card_str):
@@ -48,17 +63,15 @@ def convert_to_numpy_array(Card_str):
 
     new_card_array = np.zeros((4,13))
     new_card_array[index_2][index_1] = 1
+    all_card_array[index_2][index_1]=1
     return new_card_array
-
-
-
 
 
 def get_possible_actions(player_action):
     if player_action == "Check/Call":
         return ["Fold","Bet/Raise"]
     elif player_action == "Bet/Raise":
-        return  ["Fold","Check/Call"]
+        return ["Fold","Check/Call"]
     else:
         return ["Fold","Bet/Raise","Check/Call"]
 
@@ -67,30 +80,30 @@ def betting(player1_turn_rank, player2_turn_rank, all_possible_actions):
     action_1, player1_new_bet = Player_1.make_bets(player1_turn_rank, all_possible_actions,0)
     print("Player 1",action_1)
     if action_1 == "Fold":
-        return "Player2", 0, 0, 0
+        return "Player2", 0, 0, 0,action_1
     elif action_1 == "Bet/Raise":
         possible_actions = get_possible_actions(action_1)
         action_2,player2_new_bet = Player_2.make_bets(player2_turn_rank, possible_actions,player1_new_bet)
         print("Player 2", action_2)
         if action_2 == "Fold":
-            return "Player1", player1_new_bet, 0, player1_new_bet
+            return "Player1", player1_new_bet, 0, player1_new_bet,action_1
         else:
-            return "", player1_new_bet, player1_new_bet, 2*player1_new_bet
+            return "", player1_new_bet, player1_new_bet, 2*player1_new_bet,action_1
     else:
         action_2,player2_new_bet = Player_2.make_bets(player2_turn_rank, all_possible_actions,0)
         print("Player 2", action_2)
         if action_2 == "Fold":
-            return "Player1", 0, 0, 0
+            return "Player1", 0, 0, 0,action_1
         elif action_2 == "Check/Call":
-            return "", 0, 0, 0
+            return "", 0, 0, 0,action_1
         else:
             possible_actions = get_possible_actions(action_2)
             action_1,player1_new_bet = Player_1.make_bets(player1_turn_rank,possible_actions,player2_new_bet)
             print("Player 1", action_1)
             if action_1 == "Fold":
-                return "Player2", 0, player2_new_bet, player2_new_bet
+                return "Player2", 0, player2_new_bet, player2_new_bet,action_1
             else:
-                return "", player2_new_bet, player2_new_bet, 2*player2_new_bet
+                return "", player2_new_bet, player2_new_bet, 2*player2_new_bet,action_1
 
 
 total_pot_size = 0
@@ -105,11 +118,12 @@ player2_turn1_rank = evaluator.class_to_string(evaluator.get_rank_class(evaluato
 
 all_possible_action = ["Fold","Bet/Raise","Check/Call"]
 
-winner, player1_round1_bet, player2_round1_bet, round1_pot_size = betting(player1_turn1_rank,player2_turn1_rank, all_possible_action)
+winner, player1_round1_bet, player2_round1_bet, round1_pot_size,player1_action = betting(player1_turn1_rank,player2_turn1_rank, all_possible_action)
 player1_bet += player1_round1_bet
 player2_bet  += player2_round1_bet
 total_pot_size += round1_pot_size
 if winner == "Player1":
+    print(player1_action)
     print("Player 1 Wins: ",total_pot_size)
     print("Player 1 Gain: ", total_pot_size-player1_bet)
 elif winner == "Player2":
@@ -124,11 +138,12 @@ else:
     player1_turn2_rank =  evaluator.class_to_string(evaluator.get_rank_class(evaluator._six(player1_turn2)))
     player2_turn2_rank = evaluator.class_to_string(evaluator.get_rank_class(evaluator._six(player2_turn2)))
 
-    winner,player1_round2_bet,player2_round2_bet,round2_pot_size = betting(player1_turn2_rank,player2_turn2_rank,all_possible_action)
+    winner,player1_round2_bet,player2_round2_bet,round2_pot_size,player1_action = betting(player1_turn2_rank,player2_turn2_rank,all_possible_action)
     player1_bet += player1_round2_bet
     player2_bet += player2_round2_bet
     total_pot_size += round2_pot_size
     if winner == "Player1":
+        print(player1_action)
         print("Player 1 Wins: ",total_pot_size)
         print("Player 1 Gain: ",total_pot_size-player1_bet)
     elif winner == "Player2":
@@ -149,23 +164,28 @@ else:
         Card6 = Card.int_to_str(player1_hand[0])
         Card7 = Card.int_to_str(player1_hand[1])
         Card1_array = convert_to_numpy_array(Card1)
-        Card2_array = convert_to_numpy_array(Card1)
-        Card3_array = convert_to_numpy_array(Card1)
-        Card4_array = convert_to_numpy_array(Card1)
-        Card5_array = convert_to_numpy_array(Card1)
-        Card6_array = convert_to_numpy_array(Card1)
-        Card7_array = convert_to_numpy_array(Card1)
-        Card1_array = np.stack((Card1_array, Card2_array, Card3_array, Card4_array, Card5_array, Card6_array, Card7_array))
-        print(Card1_array)
+        Card2_array = convert_to_numpy_array(Card2)
+        Card3_array = convert_to_numpy_array(Card3)
+        Card4_array = convert_to_numpy_array(Card4)
+        Card5_array = convert_to_numpy_array(Card5)
+        Card6_array = convert_to_numpy_array(Card6)
+        Card7_array = convert_to_numpy_array(Card7)
 
         player1_turn3_rank = evaluator.class_to_string(evaluator.get_rank_class(evaluator._seven(player1_turn3)))
         player2_turn3_rank = evaluator.class_to_string(evaluator.get_rank_class(evaluator._seven(player2_turn3)))
 
-        winner,player1_round3_bet,player2_round3_bet,round3_pot_size = betting(player1_turn3_rank,player2_turn3_rank,all_possible_action)
+        winner,player1_round3_bet,player2_round3_bet,round3_pot_size,player1_action = betting(player1_turn3_rank,player2_turn3_rank,all_possible_action)
         player1_bet += player1_round3_bet
         player2_bet += player2_round3_bet
         total_pot_size += round3_pot_size
+        total_pot_array = convert_pot_to_numpy(total_pot_size)
+        state_array = np.stack(
+            (Card1_array, Card2_array, Card3_array, Card4_array, Card5_array, Card6_array, Card7_array, all_card_array,
+             total_pot_array))
+        print(state_array)
+
         if winner == "Player1":
+            print(player1_action)
             print("Player 1 Wins: ",total_pot_size)
             print("Player 1 Gain: ",total_pot_size-player1_bet)
         elif winner == "Player2":
@@ -175,6 +195,7 @@ else:
             final_score_player1 = evaluator.get_rank_class(evaluator._seven(player1_turn3))
             final_score_player2 = evaluator.get_rank_class(evaluator._seven(player1_turn3))
             if final_score_player1 > final_score_player2:
+                print(player1_action)
                 print("Player 1 Wins: ",total_pot_size)
                 print("Player 1 Gain: ",total_pot_size-player1_bet)
             else:
