@@ -5,6 +5,7 @@ import pickle
 
 def run(rounds):
   reward_table = dict()
+  reward_count = dict()
   i=0
   while i < rounds:
       deck = Deck()
@@ -183,31 +184,38 @@ def run(rounds):
               state_array = np.stack(
                   (Card1_array, Card2_array, Card3_array, Card4_array, Card5_array, Card6_array, Card7_array, all_card_array,
                    total_pot_array))
-              print(state_array)
+              # print(state_array)
               hash_key = pickle.dumps(state_array)
               gain_loss_table = np.zeros((3))
+              gain_loss_count = np.zeros((3))
               i += 1
               if winner == "Player1":
                   print(player1_action)
                   if hash_key in reward_table.keys():
                       if player1_action == "Check/Call":
-                          reward_table.values(hash_key)[1] += int(total_pot_size-player1_bet)
+                          reward_table[hash_key][1] += int(total_pot_size-player1_bet)
+                          reward_count[hash_key][1]+=1
                       elif player1_action == "Bet/Raise":
-                          reward_table.values(hash_key)[2] += int(total_pot_size-player1_bet)
+                          reward_table[hash_key][2] += int(total_pot_size-player1_bet)
+                          reward_count[hash_key][2]+=1
                   else:
                       if player1_action == "Check/Call":
                           gain_loss_table[1] = int(total_pot_size - player1_bet)
+                          gain_loss_count[1] += 1
                       elif player1_action == "Bet/Raise":
                           gain_loss_table[2] = int(total_pot_size - player1_bet)
+                          gain_loss_count[2] += 1
                   print("Player 1 Wins: ",total_pot_size)
                   print("Player 1 Gain: ",total_pot_size-player1_bet)
               elif winner == "Player2":
                   if hash_key in reward_table.keys():
                       if player1_action == "Fold":
-                          reward_table.values(hash_key)[0] += -1*int(player1_bet)
+                          reward_table[hash_key][0] += -1*int(player1_bet)
+                          reward_count[hash_key][0] += 1
                   else:
                       if player1_action == "Fold":
                           gain_loss_table[0] = -1*int(player1_bet)
+                          gain_loss_count[0] += 1
 
                   print("Player 2 Wins: ",total_pot_size)
                   print("Player 2 Gain: ",total_pot_size-player2_bet)
@@ -218,33 +226,56 @@ def run(rounds):
                       print(player1_action)
                       if hash_key in reward_table.keys():
                           if player1_action == "Check/Call":
-                              reward_table.values(hash_key)[1] = int(total_pot_size-player1_bet)
+                              reward_table[hash_key][1] += int(total_pot_size-player1_bet)
+                              reward_count[hash_key][1] +=1
                           elif player1_action == "Bet/Raise":
-                              reward_table.values(hash_key)[2] = int(total_pot_size-player1_bet)
+                              reward_table[hash_key][2] += int(total_pot_size-player1_bet)
+                              reward_count[hash_key][2] +=1
                       else:
                           if player1_action == "Check/Call":
                               gain_loss_table[1] = int(total_pot_size - player1_bet)
+                              gain_loss_count[1] +=1
                           elif player1_action == "Bet/Raise":
                               gain_loss_table[2] = int(total_pot_size - player1_bet)
+                              gain_loss_count[2] += 1
                       print("Player 1 Wins: ",total_pot_size)
                       print("Player 1 Gain: ",total_pot_size-player1_bet)
                   else:
                       if hash_key in reward_table.keys():
                           if player1_action == "Check/Call":
-                              reward_table.values(hash_key)[1] = -1*int(player1_bet)
+                              reward_table[hash_key][1] += -1*int(player1_bet)
+                              reward_count[hash_key][1] += 1
                           elif player1_action == "Bet/Raise":
-                              reward_table.values(hash_key)[2] = -1*int(player1_bet)
+                              reward_table[hash_key][2] += -1*int(player1_bet)
+                              reward_count[hash_key][2] += 1
                       else:
                           if player1_action == "Check/Call":
                               gain_loss_table[1] = -1*int(player1_bet)
+                              gain_loss_count[1] += 1
                           elif player1_action == "Bet/Raise":
                               gain_loss_table[2] = -1*int(player1_bet)
+                              gain_loss_count[2] += 1
                       print("Player 2 Wins:  ",total_pot_size)
                       print("Player 2 Gain: ",total_pot_size-player2_bet)
-              reward_table[hash_key] = gain_loss_table
 
-  print(reward_table)
+              if hash_key not in reward_table.keys():
+                  reward_table[hash_key] = gain_loss_table
+                  reward_count[hash_key] = gain_loss_count
+
+  for key in reward_table.keys():
+      count_fold = reward_count[key][0]
+      count_check = reward_count[key][1]
+      count_bet = reward_count[key][2]
+      if count_fold!=0:
+        reward_table[key][0] = reward_table[key][0]/count_fold
+      if count_check!=0:
+          reward_table[key][1] = reward_table[key][1]/count_check
+      if count_bet!=0:
+          reward_table[key][2] = reward_table[key][2]/count_bet
+
+
   return reward_table
+
 
 
 
