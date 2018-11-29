@@ -1,10 +1,8 @@
 from player import Player
 from treys import Deck, Evaluator, Card
 import numpy as np
-
-#
-# reward_table = dict()
-# state_array = np.array()
+import tensorflow as tf
+reward_table = dict()
 
 deck = Deck()
 Player_1 = Player()
@@ -183,12 +181,18 @@ else:
             (Card1_array, Card2_array, Card3_array, Card4_array, Card5_array, Card6_array, Card7_array, all_card_array,
              total_pot_array))
         print(state_array)
-
+        gain_loss_table = np.zeros((3))
         if winner == "Player1":
             print(player1_action)
+            if player1_action == "Check/Call":
+                gain_loss_table[1] = int(total_pot_size-player1_bet)
+            elif player1_action == "Bet/Raise":
+                gain_loss_table[2] = int(total_pot_size-player1_bet)
             print("Player 1 Wins: ",total_pot_size)
             print("Player 1 Gain: ",total_pot_size-player1_bet)
         elif winner == "Player2":
+            if player1_action == "Fold":
+                gain_loss_table[0] = -1*int(player1_bet)
             print("Player 2 Wins: ",total_pot_size)
             print("Player 2 Gain: ",total_pot_size-player2_bet)
         else:
@@ -196,11 +200,22 @@ else:
             final_score_player2 = evaluator.get_rank_class(evaluator._seven(player1_turn3))
             if final_score_player1 > final_score_player2:
                 print(player1_action)
+                if player1_action == "Check/Call":
+                    gain_loss_table[1] = int(total_pot_size-player1_bet)
+                elif player1_action == "Bet/Raise":
+                    gain_loss_table[2] = int(total_pot_size-player1_bet)
                 print("Player 1 Wins: ",total_pot_size)
                 print("Player 1 Gain: ",total_pot_size-player1_bet)
             else:
+                if player1_action == "Check/Call":
+                    gain_loss_table[1] = -1*int(player1_bet)
+                elif player1_action == "Bet/Raise":
+                    gain_loss_table[2] = -1*int(player1_bet)
                 print("Player 2 Wins:  ",total_pot_size)
                 print("Player 2 Gain: ",total_pot_size-player2_bet)
+        reward_table[hash(str(state_array))] = gain_loss_table
+
+print(reward_table)
 
 
 
