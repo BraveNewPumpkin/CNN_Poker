@@ -1,5 +1,5 @@
 from player import Player
-from treys import Deck,Evaluator,Card
+from treys import Deck, Evaluator, Card
 import numpy as np
 
 #
@@ -32,6 +32,8 @@ def convert_to_numpy_array(Card_str):
         index_1 = 11
     elif Card_str[0] == "A":
         index_1 = 12
+    elif Card_str[0] == "T":
+        index_1 = 8
     else:
         index_1 = int(Card_str[0])-2
 
@@ -153,15 +155,15 @@ else:
         Card5_array = convert_to_numpy_array(Card1)
         Card6_array = convert_to_numpy_array(Card1)
         Card7_array = convert_to_numpy_array(Card1)
-        state_array = np.ndarray(shape=(4,13,7))
-        np.append(state_array,Card1_array,axis=2)
-        np.append(state_array,Card2_array,axis=2)
-        np.append(state_array,Card3_array,axis=2)
-        np.append(state_array,Card4_array,axis=2)
-        np.append(state_array,Card5_array,axis=2)
-        np.append(state_array,Card6_array,axis=2)
-        np.append(state_array,Card7_array,axis=2)
-        print(state_array)
+        Card1_array = np.stack((Card1_array, Card2_array))
+        print('Card1_array: ', Card1_array.shape)
+        print('Card2_array: ', Card2_array.shape)
+        Card1_array = np.append(Card1_array, Card3_array, axis=0)
+        # Card1_array = np.append(Card1_array, Card4_array, axis=2)
+        # Card1_array = np.append(Card1_array, Card5_array, axis=2)
+        # Card1_array = np.append(Card1_array, Card6_array, axis=2)
+        # Card1_array = np.append(Card1_array, Card7_array, axis=2)
+        print(Card1_array)
 
         player1_turn3_rank = evaluator.class_to_string(evaluator.get_rank_class(evaluator._seven(player1_turn3)))
         player2_turn3_rank = evaluator.class_to_string(evaluator.get_rank_class(evaluator._seven(player2_turn3)))
