@@ -1,4 +1,4 @@
-from keras import models,Model
+from keras import models, Model
 from treys import Deck, Evaluator, Card
 import numpy as np
 
@@ -83,9 +83,9 @@ def convert_to_numpy_array(Card_str, all_card_array):
     all_card_array[index_2][index_1] = 1
     return new_card_array, all_card_array
 
-
-model_player1 = models.load_model("")
-model_player2 = models.load_model("")
+#starting a new game
+model_player1 = models.load_model("models\\heuristic.model")
+model_player2 = models.load_model("models\\heuristic.model")
 all_card_array_player1 = np.zeros((4,13))
 all_card_array_player2 = np.zeros((4,13))
 Card1_array_player1,all_card_array_player1 = convert_to_numpy_array(Card.int_to_str(flop[0]),all_card_array_player1)

@@ -19,7 +19,7 @@ def main(args):
   reward_dict = dealer.run(256)
   x_all_serialized = reward_dict.keys()
   x_all_raw = np.array([pickle.loads(k) for k in x_all_serialized])
-  print('x_all_raw: ', x_all_raw.shape)
+  # print('x_all_raw: ', x_all_raw.shape)
   right_left_pad = input_shape[1] - x_all_raw.shape[2]
   left_pad = right_left_pad // 2
   right_pad = left_pad + (right_left_pad % 2)
@@ -27,7 +27,7 @@ def main(args):
   top_pad = top_bottom_pad // 2
   bottom_pad = top_pad + (top_bottom_pad % 2)
   x_all_raw = np.pad(x_all_raw,  ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
-  print('x_all_raw padded: ', x_all_raw.shape)
+  # print('x_all_raw padded: ', x_all_raw.shape)
   y_all_raw = np.array(list(reward_dict.values()))
 
   x_train_raw, x_test_raw, y_train_raw, y_test_raw = train_test_split(x_all_raw, y_all_raw, test_size=0.25)
@@ -40,8 +40,8 @@ def main(args):
   num_classes = 3
   epochs = 6
 
-  print('num_training_examples: ', num_training_examples)
-  print('xtrain_raw: ', x_train_raw.shape)
+  # print('num_training_examples: ', num_training_examples)
+  # print('xtrain_raw: ', x_train_raw.shape)
 
 
   x_train = x_train_raw
@@ -61,16 +61,11 @@ def main(args):
                   input_shape=input_shape,
                   data_format='channels_first'
                   )
-  conv32 = Conv2D(32,
-                  kernel_size=(3, 3),
-                  activation='relu',
-                  )
-  conv64 = Conv2D(64,
+  model.add(initial)
+  model.add(Conv2D(64,
                    kernel_size=(3, 3),
                    activation='relu'
-                   )
-  model.add(initial)
-  model.add(conv64)
+                   ))
   model.add(MaxPooling2D(pool_size=(2, 2)))
   model.add(Conv2D(32,
                   kernel_size=(3, 3),
@@ -100,6 +95,8 @@ def main(args):
   score = model.evaluate(x_test, y_test, verbose=0)
   print('Test loss:', score[0])
   print('Test accuracy:', score[1])
+
+  model.save("models\\heuristic.model")
 
   return 0
 
