@@ -5,6 +5,8 @@ import numpy as np
 deck = Deck()
 evaluator = Evaluator()
 flop = deck.draw(3)
+for card in flop:
+    print(Card.int_to_pretty_str(card))
 player1_hand = deck.draw(2)
 player2_hand = deck.draw(3)
 turn = deck.draw(1)
@@ -139,7 +141,7 @@ def betting(model1_player, model2_player, flop1_array, flop2_array, flop3_array,
     y_player1 = Model.predict(model1_player, x=state_array_player1)
     action_player1 = get_action(y_player1)
     if action_player1 == "Fold":
-        return "Player 2",stage_initial_potsize,0,0
+        return "Player 2",stage_initial_potsize,0,0,action_player1,""
     elif action_player1 == "Check/Call":
         state_array_player2 = np.stack((flop1_array,flop2_array,flop3_array,turn_array,river_array,
                                         Card1_array_player2,Card2_array_player2,all_card_array_player2,pot_array_stage))
@@ -156,9 +158,9 @@ def betting(model1_player, model2_player, flop1_array, flop2_array, flop3_array,
         action_player2 = get_action(y_player2)
 
         if action_player2 == "Fold":
-            return "Player 1",stage_initial_potsize,0,0
+            return "Player 1",stage_initial_potsize,0,0,action_player1,action_player2
         elif action_player2 == "Check/Call":
-            return "",stage_initial_potsize,0,0
+            return "",stage_initial_potsize,0,0,action_player1,action_player2
         else:
             stage_initial_potsize += 100
             pot_array_stage = convert_pot_to_numpy(stage_initial_potsize)
@@ -178,9 +180,9 @@ def betting(model1_player, model2_player, flop1_array, flop2_array, flop3_array,
             y_player1 = Model.predict(model1_player, x=state_array_player1)
             action_player1 = get_action_position2(y_player1)
             if action_player1 == "Fold":
-                return "Player 2",stage_initial_potsize,0,100
+                return "Player 2",stage_initial_potsize,0,100,action_player1,action_player2
             else:
-                return "",stage_initial_potsize+100,100,100
+                return "",stage_initial_potsize+100,100,100,action_player1,action_player2
     else:
         stage_initial_potsize += 100
         pot_array_stage = convert_pot_to_numpy(stage_initial_potsize)
@@ -198,9 +200,9 @@ def betting(model1_player, model2_player, flop1_array, flop2_array, flop3_array,
         y_player2 = Model.predict(model2_player, x=state_array_player2)
         action_player2 = get_action_position2(y_player2)
         if action_player2 == "Fold":
-            return "Player 1",stage_initial_potsize,100,0
+            return "Player 1",stage_initial_potsize,100,0,action_player1,action_player2
         else:
-            return "", stage_initial_potsize+100,100,100
+            return "", stage_initial_potsize+100,100,100,action_player1,action_player2
 
 
 model_player1 = models.load_model("models/heuristic.model")
@@ -229,14 +231,15 @@ Card6_array_player2,all_card_array_player2 = convert_to_numpy_array_playercards(
 Card7_array_player2,all_card_array_player2 = convert_to_numpy_array_playercards(Card.int_to_str(player2_hand[0]),all_card_array_player2)
 
 
-winner,pot_size,player1_new_bet,player2_new_bet = betting(model_player1,model_player2,flop1_array,flop2_array,flop3_array,
+winner,pot_size,player1_new_bet,player2_new_bet,player1_action,player2_action = betting(model_player1,model_player2,flop1_array,flop2_array,flop3_array,
                                                           turn_array,river_array,Card6_array_player1,Card7_array_player1,
                                                           Card6_array_player2,Card7_array_player2,all_card_array_player1,
                                                           all_card_array_player2,total_pot_size)
 total_pot_size += pot_size
 player1_bet += player1_new_bet
 player2_bet += player2_new_bet
-
+print("Player 1",player1_action)
+print("Player 2 ",player2_action)
 if winner == "Player 1":
     print("Player 1 Wins!!",total_pot_size)
     print("Player 1 Gain!!",int(total_pot_size-player1_bet))
@@ -247,13 +250,15 @@ elif winner == "Player 2":
 
 else:
     turn_array,all_card_array_player1,all_card_array_player2 = convert_to_numpy_array(Card.int_to_str(turn),all_card_array_player1,all_card_array_player2)
-    winner, pot_size, player1_new_bet, player2_new_bet = betting(model_player1, model_player2, flop1_array, flop2_array,
+    winner, pot_size, player1_new_bet, player2_new_bet,player1_action,player2_action = betting(model_player1, model_player2, flop1_array, flop2_array,
                                                                  flop3_array,
                                                                  turn_array, river_array, Card6_array_player1,
                                                                  Card7_array_player1,
                                                                  Card6_array_player2, Card7_array_player2,
                                                                  all_card_array_player1,
                                                                  all_card_array_player2, total_pot_size)
+    print("Player 1", player1_action)
+    print("Player 2 ", player2_action)
     total_pot_size += pot_size
     player1_bet += player1_new_bet
     player2_bet += player2_new_bet
@@ -270,7 +275,7 @@ else:
         river_array, all_card_array_player1, all_card_array_player2 = convert_to_numpy_array(Card.int_to_str(river),
                                                                                             all_card_array_player1,
                                                                                             all_card_array_player2)
-        winner, pot_size, player1_new_bet, player2_new_bet = betting(model_player1, model_player2, flop1_array,
+        winner, pot_size, player1_new_bet, player2_new_bet,player1_action,player2_action = betting(model_player1, model_player2, flop1_array,
                                                                      flop2_array,
                                                                      flop3_array,
                                                                      turn_array, river_array, Card6_array_player1,
@@ -278,6 +283,8 @@ else:
                                                                      Card6_array_player2, Card7_array_player2,
                                                                      all_card_array_player1,
                                                                      all_card_array_player2, total_pot_size)
+        print("Player 1", player1_action)
+        print("Player 2 ", player2_action)
         total_pot_size += pot_size
         player1_bet += player1_new_bet
         player2_bet += player2_new_bet
