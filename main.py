@@ -13,12 +13,19 @@ import dealer
 
 
 def main(args):
+  input_shape = [9, 17, 17]
+  output_shape = [3]
 
   reward_dict = dealer.run(256)
   x_all_serialized = reward_dict.keys()
   x_all_raw = np.array([pickle.loads(k) for k in x_all_serialized])
   print('x_all_raw: ', x_all_raw.shape)
+  right_left_pad = abs(x_all_raw.shape[1] - input_shape[1])
+  top_bottom_pad = abs(x_all_raw.shape[2] - input_shape[2])
+  print('right_left_pad: ', right_left_pad)
+  print('top_bottom_pad: ', top_bottom_pad)
   x_all_raw = np.pad(x_all_raw,  ((0, 0), (0, 0), (6, 7), (2, 2)), mode='constant')
+  # x_all_raw = np.pad(x_all_raw,  (0, 0, right_left_pad, top_bottom_pad), mode='constant')
   print('x_all_raw padded: ', x_all_raw.shape)
   y_all_raw = np.array(list(reward_dict.values()))
 
@@ -31,17 +38,12 @@ def main(args):
   # steps_per_epoch / num_validation_steps == num_training_examples / num_testing_examples
   num_classes = 3
   epochs = 6
-  # input_shape = [batch_size, 4, 13, 9]
-  input_shape = [9, 17, 17]
-  output_shape = [3]
 
   print('num_training_examples: ', num_training_examples)
   print('xtrain_raw: ', x_train_raw.shape)
 
-  # right_pad = left_pad = abs(x_train_raw.shape[1] - input_shape.shape[1]) / 2
-  # top_pad = bottom_pad = abs(x_train_raw.shape[2] - input_shape.shape[2]) / 2
 
-  x_train = x_train_raw#, ((0, 0), (0, 0), (6, 7), (2, 2)), mode='constant')
+  x_train = x_train_raw
   x_test = x_test_raw
   y_train = y_train_raw
   y_test = y_test_raw
@@ -69,12 +71,16 @@ def main(args):
   model.add(initial)
   model.add(conv64)
   model.add(MaxPooling2D(pool_size=(2, 2)))
-  model.add(conv32)
-  model.add(conv64)
+  model.add(Conv2D(32,
+                  kernel_size=(3, 3),
+                  activation='relu',
+                  ))
+  model.add(Conv2D(64,
+                   kernel_size=(3, 3),
+                   activation='relu'
+                   ))
   model.add(MaxPooling2D(pool_size=(2, 2)))
-  model.add(Dropout(0.25))
   model.add(Flatten())
-  model.add(Dense(128, activation='relu'))
   model.add(Dropout(0.5))
   model.add(Dense(num_classes, activation='linear'))
 
