@@ -20,12 +20,13 @@ def main(args):
   x_all_serialized = reward_dict.keys()
   x_all_raw = np.array([pickle.loads(k) for k in x_all_serialized])
   print('x_all_raw: ', x_all_raw.shape)
-  right_left_pad = abs(x_all_raw.shape[1] - input_shape[1])
-  top_bottom_pad = abs(x_all_raw.shape[2] - input_shape[2])
-  print('right_left_pad: ', right_left_pad)
-  print('top_bottom_pad: ', top_bottom_pad)
-  x_all_raw = np.pad(x_all_raw,  ((0, 0), (0, 0), (6, 7), (2, 2)), mode='constant')
-  # x_all_raw = np.pad(x_all_raw,  (0, 0, right_left_pad, top_bottom_pad), mode='constant')
+  right_left_pad = input_shape[1] - x_all_raw.shape[2]
+  left_pad = right_left_pad // 2
+  right_pad = left_pad + (right_left_pad % 2)
+  top_bottom_pad = input_shape[2] - x_all_raw.shape[3]
+  top_pad = top_bottom_pad // 2
+  bottom_pad = top_pad + (top_bottom_pad % 2)
+  x_all_raw = np.pad(x_all_raw,  ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
   print('x_all_raw padded: ', x_all_raw.shape)
   y_all_raw = np.array(list(reward_dict.values()))
 
