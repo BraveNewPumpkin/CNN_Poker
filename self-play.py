@@ -119,20 +119,40 @@ def convert_to_numpy_array_playercards(Card_str, all_card_array):
     return new_card_array, all_card_array
 
 
-def betting(model_player1,model_player2,flop1_array,flop2_array,flop3_array,turn_array,river_array,Card1_array_player1,
-            Card2_array_player1,Card1_array_player2,Card2_array_player2,all_card_array_player1,all_card_array_player2,
+def betting(model1_player, model2_player, flop1_array, flop2_array, flop3_array, turn_array, river_array, Card1_array_player1,
+            Card2_array_player1, Card1_array_player2, Card2_array_player2, all_card_array_player1, all_card_array_player2,
             stage_initial_potsize):
+
     pot_array_stage = convert_pot_to_numpy(stage_initial_potsize)
     state_array_player1 = np.stack((flop1_array,flop2_array,flop3_array,turn_array,river_array,Card1_array_player1,
                                     Card2_array_player1,all_card_array_player1,pot_array_stage))
-    y_player1 = Model.predict(model_player1,x=state_array_player1)
+    state_array_player1 = np.expand_dims(state_array_player1,0)
+
+    input_shape = [9, 17, 17]
+    right_left_pad = input_shape[1] - state_array_player1.shape[2]
+    left_pad = right_left_pad // 2
+    right_pad = left_pad + (right_left_pad % 2)
+    top_bottom_pad = input_shape[2] - state_array_player1.shape[3]
+    top_pad = top_bottom_pad // 2
+    bottom_pad = top_pad + (top_bottom_pad % 2)
+    state_array_player1 = np.pad(state_array_player1, ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
+    y_player1 = Model.predict(model1_player, x=state_array_player1)
     action_player1 = get_action(y_player1)
     if action_player1 == "Fold":
         return "Player 2",stage_initial_potsize,0,0
     elif action_player1 == "Check/Call":
         state_array_player2 = np.stack((flop1_array,flop2_array,flop3_array,turn_array,river_array,
                                         Card1_array_player2,Card2_array_player2,all_card_array_player2,pot_array_stage))
-        y_player2 = Model.predict(model_player2,x=state_array_player2)
+        state_array_player2 = np.expand_dims(state_array_player2, 0)
+        right_left_pad = input_shape[1] - state_array_player2.shape[2]
+        left_pad = right_left_pad // 2
+        right_pad = left_pad + (right_left_pad % 2)
+        top_bottom_pad = input_shape[2] - state_array_player2.shape[3]
+        top_pad = top_bottom_pad // 2
+        bottom_pad = top_pad + (top_bottom_pad % 2)
+        state_array_player2 = np.pad(state_array_player2,
+                                     ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
+        y_player2 = Model.predict(model2_player, x=state_array_player2)
         action_player2 = get_action(y_player2)
 
         if action_player2 == "Fold":
@@ -145,7 +165,17 @@ def betting(model_player1,model_player2,flop1_array,flop2_array,flop3_array,turn
             state_array_player1 = np.stack((flop1_array, flop2_array, flop3_array,turn_array,river_array,
                                             Card1_array_player1,Card2_array_player1, all_card_array_player1,
                                             pot_array_stage))
-            y_player1 = Model.predict(model_player1,x=state_array_player1)
+            state_array_player1 = np.expand_dims(state_array_player1, 0)
+            right_left_pad = input_shape[1] - state_array_player1.shape[2]
+            left_pad = right_left_pad // 2
+            right_pad = left_pad + (right_left_pad % 2)
+            top_bottom_pad = input_shape[2] - state_array_player1.shape[3]
+            top_pad = top_bottom_pad // 2
+            bottom_pad = top_pad + (top_bottom_pad % 2)
+            state_array_player1 = np.pad(state_array_player1,
+                                         ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)),
+                                         mode='constant')
+            y_player1 = Model.predict(model1_player, x=state_array_player1)
             action_player1 = get_action_position2(y_player1)
             if action_player1 == "Fold":
                 return "Player 2",stage_initial_potsize,0,100
@@ -156,7 +186,16 @@ def betting(model_player1,model_player2,flop1_array,flop2_array,flop3_array,turn
         pot_array_stage = convert_pot_to_numpy(stage_initial_potsize)
         state_array_player2 = np.stack((flop1_array, flop2_array, flop3_array,turn_array,river_array,Card1_array_player2
                                         , Card2_array_player2, all_card_array_player2, pot_array_stage))
-        y_player2 = Model.predict(model_player2,x=state_array_player2)
+        state_array_player2 = np.expand_dims(state_array_player2, 0)
+        right_left_pad = input_shape[1] - state_array_player2.shape[2]
+        left_pad = right_left_pad // 2
+        right_pad = left_pad + (right_left_pad % 2)
+        top_bottom_pad = input_shape[2] - state_array_player2.shape[3]
+        top_pad = top_bottom_pad // 2
+        bottom_pad = top_pad + (top_bottom_pad % 2)
+        state_array_player2 = np.pad(state_array_player2,
+                                     ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
+        y_player2 = Model.predict(model2_player, x=state_array_player2)
         action_player2 = get_action_position2(y_player2)
         if action_player2 == "Fold":
             return "Player 1",stage_initial_potsize,100,0
@@ -164,8 +203,8 @@ def betting(model_player1,model_player2,flop1_array,flop2_array,flop3_array,turn
             return "", stage_initial_potsize+100,100,100
 
 
-model_player1 = models.load_model("models\\heuristic.model")
-model_player2 = models.load_model("models\\heuristic.model")
+model_player1 = models.load_model("models/heuristic.model")
+model_player2 = models.load_model("models/heuristic.model")
 
 player1_bet = 0
 player2_bet = 0
