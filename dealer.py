@@ -12,6 +12,7 @@ def run(rounds):
       Player_1 = Player()
       Player_2 = Player()
       flop = deck.draw(3)
+      print("Flop Cards")
       for cards in flop:
           print(Card.int_to_pretty_str(cards))
       player1_hand = deck.draw(2)
