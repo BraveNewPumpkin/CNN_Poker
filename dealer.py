@@ -130,12 +130,15 @@ def run(rounds):
       Card1_stage1_array,all_card_array_stage1 = convert_to_numpy_array(Card.int_to_str(flop[0]),all_card_array_stage1)
       Card2_stage1_array,all_card_array_stage1 = convert_to_numpy_array(Card.int_to_str(flop[1]),all_card_array_stage1)
       Card3_stage1_array,all_card_array_stage1 = convert_to_numpy_array(Card.int_to_str(flop[2]),all_card_array_stage1)
-      Card4_stage1_array,all_card_array_stage1 = convert_to_numpy_array(Card.int_to_str(player1_hand[0]),all_card_array_stage1)
-      Card5_stage1_array,all_card_array_stage1 = convert_to_numpy_array(Card.int_to_str(player1_hand[1]),all_card_array_stage1)
+      Card4_stage1_array = np.zeros((4,13))
+      Card5_stage1_array = np.zeros((4,13))
+      Card6_stage1_array,all_card_array_stage1 = convert_to_numpy_array(Card.int_to_str(player1_hand[0]),all_card_array_stage1)
+      Card7_stage1_array,all_card_array_stage1 = convert_to_numpy_array(Card.int_to_str(player1_hand[1]),all_card_array_stage1)
+
       pot_array_stage1 = convert_pot_to_numpy(total_pot_size)
       state_array_stage1 = np.stack(
           (Card1_stage1_array, Card2_stage1_array, Card3_stage1_array, Card4_stage1_array, Card5_stage1_array,
-           all_card_array_stage1,pot_array_stage1))
+           Card6_stage1_array,Card7_stage1_array,all_card_array_stage1,pot_array_stage1))
       hash_key_stage1 = pickle.dumps(state_array_stage1)
       gain_loss_table_stage1 = np.zeros((3))
       gain_loss_count_stage1 = np.zeros((3))
@@ -191,15 +194,16 @@ def run(rounds):
           Card3_stage2_array, all_card_array_stage2 = convert_to_numpy_array(Card.int_to_str(flop[2]),
                                                                              all_card_array_stage2)
           Card4_stage2_array,all_card_array_stage2 = convert_to_numpy_array(Card.int_to_str(turn),all_card_array_stage2)
-          Card5_stage2_array, all_card_array_stage2 = convert_to_numpy_array(Card.int_to_str(player1_hand[0]),
+          Card5_stage2_array = np.zeros((4,13))
+          Card6_stage2_array, all_card_array_stage2 = convert_to_numpy_array(Card.int_to_str(player1_hand[0]),
                                                                              all_card_array_stage2)
-          Card6_stage2_array, all_card_array_stage2 = convert_to_numpy_array(Card.int_to_str(player1_hand[1]),
+          Card7_stage2_array, all_card_array_stage2 = convert_to_numpy_array(Card.int_to_str(player1_hand[1]),
                                                                              all_card_array_stage2)
 
           pot_array_stage2 = convert_pot_to_numpy(total_pot_size)
           state_array_stage2 = np.stack(
-              (Card1_stage1_array, Card2_stage1_array, Card3_stage1_array, Card4_stage1_array, Card5_stage1_array,
-               Card6_stage2_array,all_card_array_stage2, pot_array_stage2))
+              (Card1_stage2_array, Card2_stage2_array, Card3_stage2_array, Card4_stage2_array, Card5_stage2_array,
+               Card6_stage2_array,Card7_stage2_array,all_card_array_stage2, pot_array_stage2))
           hash_key_stage2 = pickle.dumps(state_array_stage2)
           gain_loss_table_stage2 = np.zeros((3))
           gain_loss_count_stage2 = np.zeros((3))
