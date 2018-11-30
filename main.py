@@ -5,7 +5,6 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras.callbacks import TensorBoard
-import tensorflow as tf
 import numpy as np
 from sklearn.model_selection import train_test_split
 
@@ -51,7 +50,10 @@ def main(args):
 
   print('x_train: ', x_train.shape)
 
-  TensorBoard(log_dir='C:\cygwin64\home\lates\dev\cNN\project\logs\\')
+  tensor_board = TensorBoard(log_dir='C:\cygwin64\home\lates\dev\cNN\project\logs\\',
+                             write_graph=True,
+                             write_images=True,
+                             )
 
   model = Sequential()
   initial = Conv2D(32,
@@ -83,7 +85,11 @@ def main(args):
   model.compile(
     loss=keras.losses.mean_squared_error,
     optimizer=keras.optimizers.Adam(lr=0.02),
-    metrics=['accuracy'])
+    metrics=['accuracy'],
+
+  )
+
+  tensor_board.set_model(model)
 
   model.fit(x_train,
             y_train,
@@ -91,7 +97,8 @@ def main(args):
             validation_steps=21,
             epochs=epochs,
             verbose=1,
-            validation_data=(x_test, y_test))
+            validation_data=(x_test, y_test),
+            callbacks=[tensor_board])
   score = model.evaluate(x_test, y_test, verbose=0)
   print('Test loss:', score[0])
   print('Test accuracy:', score[1])
