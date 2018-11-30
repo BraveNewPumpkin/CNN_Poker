@@ -404,7 +404,7 @@ def run(rounds):
                   print("Player 2 Gain: ",total_pot_size-player2_bet)
               else:
                   final_score_player1 = evaluator.get_rank_class(evaluator._seven(player1_turn3))
-                  final_score_player2 = evaluator.get_rank_class(evaluator._seven(player1_turn3))
+                  final_score_player2 = evaluator.get_rank_class(evaluator._seven(player2_turn3))
                   if final_score_player1 > final_score_player2:
                       print(player1_action)
                       if hash_key in reward_table.keys():
