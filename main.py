@@ -15,7 +15,7 @@ import self_play
 
 
 def main(args):
-  reward_dict = dealer.run(50)
+  reward_dict = dealer.run(500000)
 
   save_obj(reward_dict, 'heuristic')
 
@@ -24,8 +24,8 @@ def main(args):
   models_dirpath = Path('models')
   model.save(str(models_dirpath / "heuristic.model"))
 
-  for i in range(1, 3):
-    reward_dict = self_play.run(5, model)
+  for i in range(1, 8):
+    reward_dict = self_play.run(500000, model)
     save_obj(reward_dict, 'self_play_' + str(i))
     model = train(reward_dict)
 
