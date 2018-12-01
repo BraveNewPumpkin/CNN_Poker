@@ -15,7 +15,7 @@ import self_play
 
 
 def main(args):
-  reward_dict = dealer.run(5)
+  reward_dict = dealer.run(50)
 
   save_obj(reward_dict, 'heuristic')
 
