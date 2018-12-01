@@ -9,25 +9,35 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.callbacks import TensorBoard
 import numpy as np
 from sklearn.model_selection import train_test_split
+import gc
 
 import dealer
 import self_play
 
 
 def main(args):
-  reward_dict = dealer.run(50)
+  reward_dict = dealer.run(500000)
+
+  gc.collect()
 
   save_obj(reward_dict, 'heuristic')
 
   model = train(reward_dict)
 
+  gc.collect()
+
   models_dirpath = Path('models')
   model.save(str(models_dirpath / "heuristic.model"))
 
-  for i in range(1, 3):
-    reward_dict = self_play.run(5, model)
+  for i in range(1, 8):
+    reward_dict = self_play.run(500000, model)
+
+    gc.collect()
+
     save_obj(reward_dict, 'self_play_' + str(i))
     model = train(reward_dict)
+
+    gc.collect()
 
     self_play_name = "self_play_" + str(i) + ".model"
     model.save(str(models_dirpath / self_play_name))
