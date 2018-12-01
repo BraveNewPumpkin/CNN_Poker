@@ -10,7 +10,7 @@ def run(rounds, model):
     reward_count = dict()
     print("running self-play")
     round_number = 0
-    print_progress(round_number, rounds, prefix='Progress:', suffix='Complete')
+    print_progress(round_number, rounds, prefix='Progress:', suffix='Complete', bar_length=40)
     while round_number < rounds:
         deck = Deck()
         evaluator = Evaluator()
@@ -582,7 +582,7 @@ def run(rounds, model):
             reward_table[hash_key_stage1] = gain_loss_stage1
             reward_count[hash_key_stage1] = gain_loss_stage1_count
         round_number += 1
-        print_progress(round_number, rounds, prefix='Progress:', suffix='Complete')
+        print_progress(round_number, rounds, prefix='Progress:', suffix='Complete', bar_length=40)
 
     for key in reward_table.keys():
         count_fold = reward_count[key][0]

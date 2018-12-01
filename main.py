@@ -12,20 +12,28 @@ from sklearn.model_selection import train_test_split
 
 import dealer
 import self_play
+import gc
 
 
 def main(args):
   reward_dict = dealer.run(50)
 
+  gc.collect()
+
   save_obj(reward_dict, 'heuristic')
 
   model = train(reward_dict)
+
+  gc.collect()
 
   models_dirpath = Path('models')
   model.save(str(models_dirpath / "heuristic.model"))
 
   for i in range(1, 3):
-    reward_dict = self_play.run(5, model)
+    reward_dict = self_play.run(50, model)
+
+    gc.collect()
+
     save_obj(reward_dict, 'self_play_' + str(i))
     model = train(reward_dict)
 
