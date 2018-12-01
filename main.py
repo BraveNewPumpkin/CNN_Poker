@@ -22,7 +22,7 @@ def main(args):
   model = train(reward_dict)
 
   models_dirpath = Path('models')
-  model.save(models_dirpath / "heuristic.model")
+  model.save(str(models_dirpath / "heuristic.model"))
 
   for i in range(1, 3):
     reward_dict = self_play.run(5, model)
@@ -30,7 +30,7 @@ def main(args):
     model = train(reward_dict)
 
     self_play_name = "self_play_" + str(i) + ".model"
-    model.save(models_dirpath / self_play_name)
+    model.save(str(models_dirpath / self_play_name))
 
   return 0
 
