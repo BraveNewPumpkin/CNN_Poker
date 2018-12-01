@@ -1,27 +1,31 @@
 import sys
+import gc
 import time
 import pickle
+from pathlib import Path
+from numbers import Number
+from collections import Set, Mapping, deque
 from klepto.archives import dir_archive
 import keras
-from pathlib import Path
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras.callbacks import TensorBoard
 import numpy as np
 from sklearn.model_selection import train_test_split
-import gc
 
 import dealer
 import self_play
 
-
 def main(args):
-  reward_dict = dealer.run(500000)
-
-  gc.collect()
-
-  save_obj(reward_dict, 'heuristic')
+#  reward_dict = dealer.run(500000)
+# 
+#  gc.collect()
+# 
+#  save_obj(reward_dict, 'heuristic')
+  reward_dict = {}
+  with open("training_data/heuristic.pkl", "rb") as f:
+      reward_dict = pickle.load(f)
 
   model = train(reward_dict)
 
@@ -150,5 +154,33 @@ def save_obj(dict, name):
   training_data_path_str = str(Path('training_data') / name)
   heuristic_training_dict = dir_archive(name=training_data_path_str, dict=dict, cached=False)
   heuristic_training_dict.dump()
+
+zero_depth_bases = (str, bytes, Number, range, bytearray)
+iteritems = 'items'
+
+def getsize(obj_0):
+    """Recursively iterate to sum size of object & members."""
+    _seen_ids = set()
+    def inner(obj):
+        obj_id = id(obj)
+        if obj_id in _seen_ids:
+            return 0
+        _seen_ids.add(obj_id)
+        size = sys.getsizeof(obj)
+        if isinstance(obj, zero_depth_bases):
+            pass # bypass remaining control flow and return
+        elif isinstance(obj, (tuple, list, Set, deque)):
+            size += sum(inner(i) for i in obj)
+        elif isinstance(obj, Mapping) or hasattr(obj, iteritems):
+            size += sum(inner(k) + inner(v) for k, v in getattr(obj, iteritems)())
+        # Check for custom object instances - may subclass above too
+        if hasattr(obj, '__dict__'):
+            size += inner(vars(obj))
+        if hasattr(obj, '__slots__'): # can have __slots__ with __dict__
+            size += sum(inner(getattr(obj, s)) for s in obj.__slots__ if hasattr(obj, s))
+        return size
+    return inner(obj_0)
+
+
 
 main(sys.argv)
