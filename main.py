@@ -1,6 +1,7 @@
 import sys
 import time
 import pickle
+from klepto.archives import dir_archive
 import keras
 from pathlib import Path
 from keras.models import Sequential
@@ -24,6 +25,7 @@ def main(args):
 
   model = train(reward_dict)
 
+  del reward_dict
   gc.collect()
 
   models_dirpath = Path('models')
@@ -37,6 +39,7 @@ def main(args):
     save_obj(reward_dict, 'self_play_' + str(i))
     model = train(reward_dict)
 
+    del reward_dict
     gc.collect()
 
     self_play_name = "self_play_" + str(i) + ".model"
@@ -142,8 +145,10 @@ def create_model(input_shape, num_classes):
 
   return model
 
-def save_obj(obj, name):
-  with open('training_data/' + name + '.pkl', 'wb') as f:
-    pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+def save_obj(dict, name):
+  training_data_path_str = str(Path('training_data') / name)
+  heuristic_training_dict = dir_archive(name=training_data_path_str, dict=dict, cached=False)
+  heuristic_training_dict.dump()
 
 main(sys.argv)
