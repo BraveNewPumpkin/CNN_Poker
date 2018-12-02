@@ -24,9 +24,12 @@ def main(args):
   # gc.collect()
   #
   # save_obj(reward_dict, 'heuristic')
-  reward_dict = {}
-  with open("training_data/heuristic.pkl", "rb") as f:
-      reward_dict = pickle.load(f)
+
+  # reward_dict = {}
+  # with open("training_data/heuristic.pkl", "rb") as f:
+  #     reward_dict = pickle.load(f)
+
+  reward_dict = load_obj('heuristic')
 
   model = train(reward_dict)
 
@@ -160,6 +163,13 @@ def save_obj(dict, name):
   training_data_path_str = str(Path('training_data') / name)
   heuristic_training_dict = dir_archive(name=training_data_path_str, dict=dict, cached=False)
   heuristic_training_dict.dump()
+
+def load_obj(name):
+  training_data_path_str = str(Path('training_data') / name)
+  heuristic_training_dict = dir_archive(name=training_data_path_str)
+  heuristic_training_dict.load()
+  return heuristic_training_dict
+
 
 zero_depth_bases = (str, bytes, Number, range, bytearray)
 iteritems = 'items'
