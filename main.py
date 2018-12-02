@@ -59,7 +59,8 @@ def train(reward_dict):
   input_shape = [9, 17, 17]
   output_shape = [3]
 
-  x_train, x_test, y_train, y_test = extract_train_and_test(reward_dict, input_shape)
+  test_size = 10000
+  x_train, x_test, y_train, y_test = extract_train_and_test(reward_dict, input_shape, test_size)
 
   steps_per_epoch = int(int(x_train.shape[0]) / 512)
   # steps_per_epoch / num_validation_steps == num_training_examples / num_testing_examples
@@ -79,7 +80,7 @@ def train(reward_dict):
   model.fit(x_train,
             y_train,
             steps_per_epoch=steps_per_epoch,
-            validation_steps=21,
+            validation_steps=test_size,
             epochs=epochs,
             verbose=1,
             validation_data=(x_test, y_test),
@@ -92,10 +93,10 @@ def train(reward_dict):
   return model
 
 
-def extract_train_and_test(reward_dict, input_shape):
+def extract_train_and_test(reward_dict, input_shape, test_size):
   x_all_raw, y_all_raw = extract_x_and_y(reward_dict)
 
-  x_train, x_test, y_train, y_test = train_test_split(x_all_raw, y_all_raw, test_size=0.25)
+  x_train, x_test, y_train, y_test = train_test_split(x_all_raw, y_all_raw, train_size=25000, test_size=test_size)
   x_train = pad_input(input_shape, x_train)
   x_test = pad_input(input_shape, x_test)
 
