@@ -118,8 +118,8 @@ def pad_input(desired_input_shape, x):
 
   tf_padding_dims = [[0, 0], [0, 0], [left_pad, right_pad], [top_pad, bottom_pad]]
 
-  # x_padded = np.pad(x,  ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
-  x_padded = tf.pad(x, tf_padding_dims)
+  x_padded = np.pad(x,  ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
+  # x_padded = tf.pad(x, tf_padding_dims)
   return x_padded
 
 def create_model(input_shape, num_classes):
