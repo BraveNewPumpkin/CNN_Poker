@@ -1,7 +1,6 @@
 import sys
 import time
 import pickle
-from klepto.archives import dir_archive
 import keras
 from pathlib import Path
 from keras.models import Sequential
@@ -10,53 +9,55 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.callbacks import TensorBoard
 import numpy as np
 from sklearn.model_selection import train_test_split
-import gc
 
 import dealer
 import self_play
 
 
 def main(args):
-  reward_dict = dealer.run(500000)
-
-  gc.collect()
-
-  save_obj(reward_dict, 'heuristic')
-
-  model = train(reward_dict)
-
-  del reward_dict
-  gc.collect()
-
+  reward_dict1,reward_dict2,reward_dict3 = dealer.run(1000)
+  #save_obj(reward_dict, 'heuristic')
+  input_shape_s1 = [7,17,17]
+  input_shape_s2 = [8,17,17]
+  input_shape_s3 = [9,17,17]
+  model1 = train(reward_dict1,input_shape_s1,32)
   models_dirpath = Path('models')
-  model.save(str(models_dirpath / "heuristic.model"))
+  model1.save(str(models_dirpath / "heuristic1.model"))
+  model2 = train(reward_dict2,input_shape_s2,32)
+  model2.save(str(models_dirpath / "heuristic2.model"))
+  model3 = train(reward_dict3,input_shape_s3,16)
+  model3.save(str(models_dirpath / "heuristic3.model"))
 
   for i in range(1, 8):
-    reward_dict = self_play.run(500000, model)
+    reward_dict1, reward_dict2, reward_dict3 = self_play.run(1000, model1,model2,model3)
+    x_all_raw = np.array([pickle.loads(k) for k in reward_dict2.keys()])
+    print(x_all_raw.shape)
+    #save_obj(reward_dict, 'self_play_' + str(i))
+    input_shape_s1 = [7, 17, 17]
+    input_shape_s2 = [8, 17, 17]
+    input_shape_s3 = [9, 17, 17]
+    model1 = train(reward_dict1,input_shape_s1,32)
+    self_play_name1 = "self_play_1" + str(i) + ".model"
+    model1.save(str(models_dirpath / self_play_name1))
+    model2 = train(reward_dict2,input_shape_s2,8)
+    self_play_name2 = "self_play_2" + str(i) + ".model"
+    model2.save(str(models_dirpath / self_play_name2))
+    model3 = train(reward_dict3,input_shape_s3,32)
+    self_play_name3 = "self_play_3" + str(i) + ".model"
+    model3.save(str(models_dirpath / self_play_name3))
 
-    gc.collect()
-
-    save_obj(reward_dict, 'self_play_' + str(i))
-    model = train(reward_dict)
-
-    del reward_dict
-    gc.collect()
-
-    self_play_name = "self_play_" + str(i) + ".model"
-    model.save(str(models_dirpath / self_play_name))
 
   return 0
 
-def train(reward_dict):
-  input_shape = [9, 17, 17]
+def train(reward_dict,input_shape,batch):
   output_shape = [3]
 
   x_train, x_test, y_train, y_test = extract_train_and_test(reward_dict, input_shape)
 
-  steps_per_epoch = 10
-  # steps_per_epoch / num_validation_steps == num_training_examples / num_testing_examples
+  steps_per_epoch = int(x_train.shape[0]/batch)
+  validation_steps = int(x_test.shape[0]/batch)
   num_classes = 3
-  epochs = 6
+  epochs = 1
 
   tensor_board_path = Path('logs/{}'.format(time.time()))
   tensor_board = TensorBoard(log_dir=str(tensor_board_path),
@@ -66,16 +67,15 @@ def train(reward_dict):
 
   model = create_model(input_shape, num_classes)
 
-  tensor_board.set_model(model)
+  # tensor_board.set_model(model)
 
   model.fit(x_train,
             y_train,
             steps_per_epoch=steps_per_epoch,
-            validation_steps=21,
+            validation_steps=validation_steps,
             epochs=epochs,
             verbose=1,
-            validation_data=(x_test, y_test),
-            callbacks=[tensor_board])
+            validation_data=(x_test, y_test))
   score = model.evaluate(x_test, y_test, verbose=0)
   print('Test loss:', score[0])
   print('Test accuracy:', score[1])
@@ -100,6 +100,7 @@ def extract_x_and_y(reward_dict):
 
 
 def pad_input(desired_input_shape, x):
+  print(x.shape)
   right_left_pad = desired_input_shape[1] - x.shape[2]
   left_pad = right_left_pad // 2
   right_pad = left_pad + (right_left_pad % 2)
@@ -139,16 +140,14 @@ def create_model(input_shape, num_classes):
 
   model.compile(
     loss=keras.losses.mean_squared_error,
-    optimizer=keras.optimizers.Nadam(lr=0.02),
+    optimizer=keras.optimizers.Nadam(lr=0.1),
     metrics=['accuracy']
   )
 
   return model
 
-
-def save_obj(dict, name):
-  training_data_path_str = str(Path('training_data') / name)
-  heuristic_training_dict = dir_archive(name=training_data_path_str, dict=dict, cached=False)
-  heuristic_training_dict.dump()
+def save_obj(obj, name):
+  with open('training_data/' + name + '.pkl', 'wb') as f:
+    pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 main(sys.argv)

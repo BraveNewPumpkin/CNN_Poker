@@ -5,11 +5,15 @@ import numpy as np
 import pickle
 
 def run(rounds):
-  reward_table = dict()
-  reward_count = dict()
+  reward_table_stage1 = dict()
+  reward_count_stage1 = dict()
+  reward_table_stage2 = dict()
+  reward_count_stage2 = dict()
+  reward_table_stage3 = dict()
+  reward_count_stage3 = dict()
   round_number=0
   print("running heuristic:")
-  print_progress(round_number, rounds, prefix='Progress:', suffix='Complete', bar_length=40)
+  print_progress(round_number, rounds, prefix='Progress:', suffix='Complete')
   while round_number < rounds:
       deck = Deck()
       Player_1 = Player()
@@ -140,7 +144,7 @@ def run(rounds):
 
       pot_array_stage1 = convert_pot_to_numpy(total_pot_size)
       state_array_stage1 = np.stack(
-          (Card1_stage1_array, Card2_stage1_array, Card3_stage1_array, Card4_stage1_array, Card5_stage1_array,
+          (Card1_stage1_array, Card2_stage1_array, Card3_stage1_array,
            Card6_stage1_array,Card7_stage1_array,all_card_array_stage1,pot_array_stage1))
       hash_key_stage1 = pickle.dumps(state_array_stage1)
       gain_loss_table_stage1 = np.zeros((3))
@@ -149,17 +153,17 @@ def run(rounds):
       if winner == "Player1":
           #print(player1_action_stage1)
           if player1_action_stage1 == "Bet/Raise":
-              if hash_key_stage1 in reward_table.keys():
-                  reward_table[hash_key_stage1][2] += int(total_pot_size-player1_bet)
-                  reward_count[hash_key_stage1][2] += 1
+              if hash_key_stage1 in reward_table_stage1.keys():
+                  reward_table_stage1[hash_key_stage1][2] += int(total_pot_size-player1_bet)
+                  reward_count_stage1[hash_key_stage1][2] += 1
               else:
                   gain_loss_count_stage1[2] += 1
                   gain_loss_table_stage1[2] += int(total_pot_size-player1_bet)
 
           elif player1_action_stage1 == "Check/Call":
-              if hash_key_stage1 in reward_table.keys():
-                  reward_table[hash_key_stage1][1] += int(total_pot_size-player1_bet)
-                  reward_count[hash_key_stage1][1] += 1
+              if hash_key_stage1 in reward_table_stage1.keys():
+                  reward_table_stage1[hash_key_stage1][1] += int(total_pot_size-player1_bet)
+                  reward_count_stage1[hash_key_stage1][1] += 1
               else:
                   gain_loss_count_stage1[1] += 1
                   gain_loss_table_stage1[1] += int(total_pot_size-player1_bet)
@@ -167,10 +171,10 @@ def run(rounds):
           #print("Player 1 Wins: ",total_pot_size)
           #print("Player 1 Gain: ", total_pot_size-player1_bet)
       elif winner == "Player2":
-          if hash_key_stage1 in reward_table.keys():
+          if hash_key_stage1 in reward_table_stage1.keys():
               if player1_action_stage1 == "Fold":
-                  reward_table[hash_key_stage1][0] += -1 * int(player1_bet)
-                  reward_count[hash_key_stage1][0] += 1
+                  reward_table_stage1[hash_key_stage1][0] += -1 * int(player1_bet)
+                  reward_count_stage1[hash_key_stage1][0] += 1
           else:
               if player1_action_stage1 == "Fold":
                   gain_loss_table_stage1[0] = -1 * int(player1_bet)
@@ -205,7 +209,7 @@ def run(rounds):
 
           pot_array_stage2 = convert_pot_to_numpy(total_pot_size)
           state_array_stage2 = np.stack(
-              (Card1_stage2_array, Card2_stage2_array, Card3_stage2_array, Card4_stage2_array, Card5_stage2_array,
+              (Card1_stage2_array, Card2_stage2_array, Card3_stage2_array, Card4_stage2_array,
                Card6_stage2_array,Card7_stage2_array,all_card_array_stage2, pot_array_stage2))
           hash_key_stage2 = pickle.dumps(state_array_stage2)
           gain_loss_table_stage2 = np.zeros((3))
@@ -213,58 +217,58 @@ def run(rounds):
           if winner == "Player1":
               #print(player1_action_stage2)
               if player1_action_stage2 == "Bet/Raise":
-                  if hash_key_stage2 in reward_table.keys():
-                      reward_table[hash_key_stage2][2] += int(total_pot_size - player1_bet)
-                      reward_count[hash_key_stage2][2] += 1
+                  if hash_key_stage2 in reward_table_stage2.keys():
+                      reward_table_stage2[hash_key_stage2][2] += int(total_pot_size - player1_bet)
+                      reward_count_stage2[hash_key_stage2][2] += 1
                   else:
                       gain_loss_count_stage2[2] += 1
                       gain_loss_table_stage2[2] += int(total_pot_size - player1_bet)
 
               elif player1_action_stage2 == "Check/Call":
-                  if hash_key_stage2 in reward_table.keys():
-                      reward_table[hash_key_stage2][1] += int(total_pot_size - player1_bet)
-                      reward_count[hash_key_stage2][1] += 1
+                  if hash_key_stage2 in reward_table_stage2.keys():
+                      reward_table_stage2[hash_key_stage2][1] += int(total_pot_size - player1_bet)
+                      reward_count_stage2[hash_key_stage2][1] += 1
                   else:
                       gain_loss_count_stage2[1] += 1
                       gain_loss_table_stage2[1] += int(total_pot_size - player1_bet)
               if player1_action_stage1 == "Bet/Raise":
-                  if hash_key_stage1 in reward_table.keys():
-                      reward_table[hash_key_stage1][2] += int(total_pot_size - player1_bet)
-                      reward_count[hash_key_stage1][2] += 1
+                  if hash_key_stage1 in reward_table_stage1.keys():
+                      reward_table_stage1[hash_key_stage1][2] += int(total_pot_size - player1_bet)
+                      reward_count_stage1[hash_key_stage1][2] += 1
                   else:
                       gain_loss_count_stage1[2] += 1
                       gain_loss_table_stage1[2] += int(total_pot_size - player1_bet)
 
               elif player1_action_stage1 == "Check/Call":
-                  if hash_key_stage1 in reward_table.keys():
-                      reward_table[hash_key_stage1][1] += int(total_pot_size - player1_bet)
-                      reward_count[hash_key_stage1][1] += 1
+                  if hash_key_stage1 in reward_table_stage1.keys():
+                      reward_table_stage1[hash_key_stage1][1] += int(total_pot_size - player1_bet)
+                      reward_count_stage1[hash_key_stage1][1] += 1
                   else:
                       gain_loss_count_stage1[1] += 1
                       gain_loss_table_stage1[1] += int(total_pot_size - player1_bet)
               #print("Player 1 Wins: ",total_pot_size)
               #print("Player 1 Gain: ",total_pot_size-player1_bet)
           elif winner == "Player2":
-              if hash_key_stage2 in reward_table.keys():
+              if hash_key_stage2 in reward_table_stage2.keys():
                   if player1_action_stage2 == "Fold":
-                      reward_table[hash_key_stage2][0] += -1 * int(player1_bet)
-                      reward_count[hash_key_stage2][0] += 1
+                      reward_table_stage2[hash_key_stage2][0] += -1 * int(player1_bet)
+                      reward_count_stage2[hash_key_stage2][0] += 1
               else:
                   if player1_action_stage2 == "Fold":
                       gain_loss_table_stage2[0] = -1 * int(player1_bet)
                       gain_loss_count_stage2[0] += 1
               if player1_action_stage1 == "Bet/Raise":
-                  if hash_key_stage1 in reward_table.keys():
-                      reward_table[hash_key_stage1][2] += int(total_pot_size - player1_bet)
-                      reward_count[hash_key_stage1][2] += 1
+                  if hash_key_stage1 in reward_table_stage1.keys():
+                      reward_table_stage1[hash_key_stage1][2] += int(total_pot_size - player1_bet)
+                      reward_count_stage1[hash_key_stage1][2] += 1
                   else:
                       gain_loss_count_stage1[2] += 1
                       gain_loss_table_stage1[2] += int(total_pot_size - player1_bet)
 
               elif player1_action_stage1 == "Check/Call":
-                  if hash_key_stage1 in reward_table.keys():
-                      reward_table[hash_key_stage1][1] += -1*int(player1_bet)
-                      reward_count[hash_key_stage1][1] += 1
+                  if hash_key_stage1 in reward_table_stage1.keys():
+                      reward_table_stage1[hash_key_stage1][1] += -1*int(player1_bet)
+                      reward_count_stage1[hash_key_stage1][1] += 1
                   else:
                       gain_loss_count_stage1[1] += 1
                       gain_loss_table_stage1[1] += -1*int(player1_bet)
@@ -310,14 +314,14 @@ def run(rounds):
               gain_loss_count_stage3 = np.zeros((3))
               if winner == "Player1":
                   #print(player1_action)
-                  if hash_key in reward_table.keys():
+                  if hash_key in reward_table_stage3.keys():
 
                       if player1_action == "Check/Call":
-                          reward_table[hash_key][1] += int(total_pot_size-player1_bet)
-                          reward_count[hash_key][1]+=1
+                          reward_table_stage3[hash_key][1] += int(total_pot_size-player1_bet)
+                          reward_count_stage3[hash_key][1]+=1
                       elif player1_action == "Bet/Raise":
-                          reward_table[hash_key][2] += int(total_pot_size-player1_bet)
-                          reward_count[hash_key][2]+=1
+                          reward_table_stage3[hash_key][2] += int(total_pot_size-player1_bet)
+                          reward_count_stage3[hash_key][2]+=1
                   else:
                       if player1_action == "Check/Call":
                           gain_loss_table_stage3[1] = int(total_pot_size - player1_bet)
@@ -327,33 +331,33 @@ def run(rounds):
                           gain_loss_count_stage3[2] += 1
 
                   if player1_action_stage2 == "Bet/Raise":
-                      if hash_key_stage2 in reward_table.keys():
-                          reward_table[hash_key_stage2][2] += int(total_pot_size - player1_bet)
-                          reward_count[hash_key_stage2][2] += 1
+                      if hash_key_stage2 in reward_table_stage2.keys():
+                          reward_table_stage2[hash_key_stage2][2] += int(total_pot_size - player1_bet)
+                          reward_count_stage2[hash_key_stage2][2] += 1
                       else:
                           gain_loss_count_stage2[2] += 1
                           gain_loss_table_stage2[2] += int(total_pot_size - player1_bet)
 
                   elif player1_action_stage2 == "Check/Call":
-                      if hash_key_stage2 in reward_table.keys():
-                          reward_table[hash_key_stage2][1] += int(total_pot_size - player1_bet)
-                          reward_count[hash_key_stage2][1] += 1
+                      if hash_key_stage2 in reward_table_stage2.keys():
+                          reward_table_stage2[hash_key_stage2][1] += int(total_pot_size - player1_bet)
+                          reward_count_stage2[hash_key_stage2][1] += 1
                       else:
                           gain_loss_count_stage2[1] += 1
                           gain_loss_table_stage2[1] += int(total_pot_size - player1_bet)
 
                   if player1_action_stage1 == "Bet/Raise":
-                      if hash_key_stage1 in reward_table.keys():
-                          reward_table[hash_key_stage1][2] += int(total_pot_size - player1_bet)
-                          reward_count[hash_key_stage1][2] += 1
+                      if hash_key_stage1 in reward_table_stage1.keys():
+                          reward_table_stage1[hash_key_stage1][2] += int(total_pot_size - player1_bet)
+                          reward_count_stage1[hash_key_stage1][2] += 1
                       else:
                           gain_loss_count_stage1[2] += 1
                           gain_loss_table_stage1[2] += int(total_pot_size - player1_bet)
 
                   elif player1_action_stage1 == "Check/Call":
-                      if hash_key_stage1 in reward_table.keys():
-                          reward_table[hash_key_stage1][1] += int(total_pot_size - player1_bet)
-                          reward_count[hash_key_stage1][1] += 1
+                      if hash_key_stage1 in reward_table_stage1.keys():
+                          reward_table_stage1[hash_key_stage1][1] += int(total_pot_size - player1_bet)
+                          reward_count_stage1[hash_key_stage1][1] += 1
                       else:
                           gain_loss_count_stage1[1] += 1
                           gain_loss_table_stage1[1] += int(total_pot_size - player1_bet)
@@ -362,42 +366,42 @@ def run(rounds):
                   #print("Player 1 Wins: ",total_pot_size)
                   #print("Player 1 Gain: ",total_pot_size-player1_bet)
               elif winner == "Player2":
-                  if hash_key in reward_table.keys():
+                  if hash_key in reward_table_stage3.keys():
                       if player1_action == "Fold":
-                          reward_table[hash_key][0] += -1*int(player1_bet)
+                          reward_table_stage3[hash_key][0] += -1*int(player1_bet)
                           reward_count[hash_key][0] += 1
                   else:
                       if player1_action == "Fold":
                           gain_loss_table_stage3[0] = -1*int(player1_bet)
                           gain_loss_count_stage3[0] += 1
                   if player1_action_stage2 == "Bet/Raise":
-                      if hash_key_stage2 in reward_table.keys():
-                          reward_table[hash_key_stage2][2] += -1*int(player1_bet)
-                          reward_count[hash_key_stage2][2] += 1
+                      if hash_key_stage2 in reward_table_stage2.keys():
+                          reward_table_stage2[hash_key_stage2][2] += -1*int(player1_bet)
+                          reward_count_stage2[hash_key_stage2][2] += 1
                       else:
                           gain_loss_count_stage2[2] += 1
                           gain_loss_table_stage2[2] += -1*int(player1_bet)
 
                   elif player1_action_stage2 == "Check/Call":
-                      if hash_key_stage2 in reward_table.keys():
-                          reward_table[hash_key_stage2][1] += -1*int(player1_bet)
-                          reward_count[hash_key_stage2][1] += 1
+                      if hash_key_stage2 in reward_table_stage2.keys():
+                          reward_table_stage2[hash_key_stage2][1] += -1*int(player1_bet)
+                          reward_count_stage2[hash_key_stage2][1] += 1
                       else:
                           gain_loss_count_stage2[1] += 1
                           gain_loss_table_stage2[1] += -1*int(player1_bet)
 
                   if player1_action_stage1 == "Bet/Raise":
-                      if hash_key_stage1 in reward_table.keys():
-                          reward_table[hash_key_stage1][2] += -1*int(player1_bet)
-                          reward_count[hash_key_stage1][2] += 1
+                      if hash_key_stage1 in reward_table_stage1.keys():
+                          reward_table_stage1[hash_key_stage1][2] += -1*int(player1_bet)
+                          reward_count_stage1[hash_key_stage1][2] += 1
                       else:
                           gain_loss_count_stage1[2] += 1
                           gain_loss_table_stage1[2] += -1*int(player1_bet)
 
                   elif player1_action_stage1 == "Check/Call":
-                      if hash_key_stage1 in reward_table.keys():
-                          reward_table[hash_key_stage1][1] += -1*int(player1_bet)
-                          reward_count[hash_key_stage1][1] += 1
+                      if hash_key_stage1 in reward_table_stage1.keys():
+                          reward_table_stage1[hash_key_stage1][1] += -1*int(player1_bet)
+                          reward_count_stage1[hash_key_stage1][1] += 1
                       else:
                           gain_loss_count_stage1[1] += 1
                           gain_loss_table_stage1[1] += -1*int(player1_bet)
@@ -409,13 +413,13 @@ def run(rounds):
                   final_score_player2 = evaluator.get_rank_class(evaluator._seven(player2_turn3))
                   if final_score_player1 > final_score_player2:
                       #print(player1_action)
-                      if hash_key in reward_table.keys():
+                      if hash_key in reward_table_stage3.keys():
                           if player1_action == "Check/Call":
-                              reward_table[hash_key][1] += int(total_pot_size-player1_bet)
-                              reward_count[hash_key][1] +=1
+                              reward_table_stage3[hash_key][1] += int(total_pot_size-player1_bet)
+                              reward_count_stage3[hash_key][1] +=1
                           elif player1_action == "Bet/Raise":
-                              reward_table[hash_key][2] += int(total_pot_size-player1_bet)
-                              reward_count[hash_key][2] +=1
+                              reward_table_stage3[hash_key][2] += int(total_pot_size-player1_bet)
+                              reward_count_stage3[hash_key][2] +=1
                       else:
                           if player1_action == "Check/Call":
                               gain_loss_table_stage3[1] = int(total_pot_size - player1_bet)
@@ -424,46 +428,46 @@ def run(rounds):
                               gain_loss_table_stage3[2] = int(total_pot_size - player1_bet)
                               gain_loss_count_stage3[2] += 1
                       if player1_action_stage2 == "Bet/Raise":
-                          if hash_key_stage2 in reward_table.keys():
-                              reward_table[hash_key_stage2][2] += int(total_pot_size - player1_bet)
-                              reward_count[hash_key_stage2][2] += 1
+                          if hash_key_stage2 in reward_table_stage2.keys():
+                              reward_table_stage2[hash_key_stage2][2] += int(total_pot_size - player1_bet)
+                              reward_count_stage2[hash_key_stage2][2] += 1
                           else:
                               gain_loss_count_stage2[2] += 1
                               gain_loss_table_stage2[2] += int(total_pot_size - player1_bet)
 
                       elif player1_action_stage2 == "Check/Call":
-                          if hash_key_stage2 in reward_table.keys():
-                              reward_table[hash_key_stage2][1] += int(total_pot_size - player1_bet)
-                              reward_count[hash_key_stage2][1] += 1
+                          if hash_key_stage2 in reward_table_stage2.keys():
+                              reward_table_stage2[hash_key_stage2][1] += int(total_pot_size - player1_bet)
+                              reward_count_stage2[hash_key_stage2][1] += 1
                           else:
                               gain_loss_count_stage2[1] += 1
                               gain_loss_table_stage2[1] += int(total_pot_size - player1_bet)
 
                       if player1_action_stage1 == "Bet/Raise":
-                          if hash_key_stage1 in reward_table.keys():
-                              reward_table[hash_key_stage1][2] += int(total_pot_size - player1_bet)
-                              reward_count[hash_key_stage1][2] += 1
+                          if hash_key_stage1 in reward_table_stage1.keys():
+                              reward_table_stage1[hash_key_stage1][2] += int(total_pot_size - player1_bet)
+                              reward_count_stage1[hash_key_stage1][2] += 1
                           else:
                               gain_loss_count_stage1[2] += 1
                               gain_loss_table_stage1[2] += int(total_pot_size - player1_bet)
 
                       elif player1_action_stage1 == "Check/Call":
-                          if hash_key_stage1 in reward_table.keys():
-                              reward_table[hash_key_stage1][1] += int(total_pot_size - player1_bet)
-                              reward_count[hash_key_stage1][1] += 1
+                          if hash_key_stage1 in reward_table_stage1.keys():
+                              reward_table_stage1[hash_key_stage1][1] += int(total_pot_size - player1_bet)
+                              reward_count_stage1[hash_key_stage1][1] += 1
                           else:
                               gain_loss_count_stage1[1] += 1
                               gain_loss_table_stage1[1] += int(total_pot_size - player1_bet)
                       #print("Player 1 Wins: ",total_pot_size)
                       #print("Player 1 Gain: ",total_pot_size-player1_bet)
                   else:
-                      if hash_key in reward_table.keys():
+                      if hash_key in reward_table_stage3.keys():
                           if player1_action == "Check/Call":
-                              reward_table[hash_key][1] += -1*int(player1_bet)
-                              reward_count[hash_key][1] += 1
+                              reward_table_stage3[hash_key][1] += -1*int(player1_bet)
+                              reward_count_stage3[hash_key][1] += 1
                           elif player1_action == "Bet/Raise":
-                              reward_table[hash_key][2] += -1*int(player1_bet)
-                              reward_count[hash_key][2] += 1
+                              reward_table_stage3[hash_key][2] += -1*int(player1_bet)
+                              reward_count_stage3[hash_key][2] += 1
                       else:
                           if player1_action == "Check/Call":
                               gain_loss_table_stage3[1] = -1*int(player1_bet)
@@ -473,68 +477,91 @@ def run(rounds):
                               gain_loss_count_stage3[2] += 1
 
                       if player1_action_stage2 == "Bet/Raise":
-                          if hash_key_stage2 in reward_table.keys():
-                              reward_table[hash_key_stage2][2] += -1 * int(player1_bet)
-                              reward_count[hash_key_stage2][2] += 1
+                          if hash_key_stage2 in reward_table_stage2.keys():
+                              reward_table_stage2[hash_key_stage2][2] += -1 * int(player1_bet)
+                              reward_count_stage2[hash_key_stage2][2] += 1
                           else:
                               gain_loss_count_stage2[2] += 1
                               gain_loss_table_stage2[2] += -1 * int(player1_bet)
 
                       elif player1_action_stage2 == "Check/Call":
-                          if hash_key_stage2 in reward_table.keys():
-                              reward_table[hash_key_stage2][1] += -1 * int(player1_bet)
-                              reward_count[hash_key_stage2][1] += 1
+                          if hash_key_stage2 in reward_table_stage2.keys():
+                              reward_table_stage2[hash_key_stage2][1] += -1 * int(player1_bet)
+                              reward_count_stage2[hash_key_stage2][1] += 1
                           else:
                               gain_loss_count_stage2[1] += 1
                               gain_loss_table_stage2[1] += -1 * int(player1_bet)
 
                       if player1_action_stage1 == "Bet/Raise":
-                          if hash_key_stage1 in reward_table.keys():
-                              reward_table[hash_key_stage1][2] += -1 * int(player1_bet)
-                              reward_count[hash_key_stage1][2] += 1
+                          if hash_key_stage1 in reward_table_stage1.keys():
+                              reward_table_stage1[hash_key_stage1][2] += -1 * int(player1_bet)
+                              reward_count_stage1[hash_key_stage1][2] += 1
                           else:
                               gain_loss_count_stage1[2] += 1
                               gain_loss_table_stage1[2] += -1 * int(player1_bet)
 
                       elif player1_action_stage1 == "Check/Call":
-                          if hash_key_stage1 in reward_table.keys():
-                              reward_table[hash_key_stage1][1] += -1 * int(player1_bet)
-                              reward_count[hash_key_stage1][1] += 1
+                          if hash_key_stage1 in reward_table_stage1.keys():
+                              reward_table_stage1[hash_key_stage1][1] += -1 * int(player1_bet)
+                              reward_count_stage1[hash_key_stage1][1] += 1
                           else:
                               gain_loss_count_stage1[1] += 1
                               gain_loss_table_stage1[1] += -1 * int(player1_bet)
                       #print("Player 2 Wins:  ",total_pot_size)
                       #print("Player 2 Gain: ",total_pot_size-player2_bet)
 
-              if hash_key not in reward_table.keys():
-                  reward_table[hash_key] = gain_loss_table_stage3
-                  reward_count[hash_key] = gain_loss_count_stage3
+              if hash_key not in reward_table_stage3.keys():
+                  reward_table_stage3[hash_key] = gain_loss_table_stage3
+                  reward_count_stage3[hash_key] = gain_loss_count_stage3
 
-          if hash_key_stage2 not in reward_table.keys():
-              reward_table[hash_key_stage2] = gain_loss_table_stage2
-              reward_count[hash_key_stage2] = gain_loss_count_stage2
+          if hash_key_stage2 not in reward_table_stage2.keys():
+              reward_table_stage2[hash_key_stage2] = gain_loss_table_stage2
+              reward_count_stage2[hash_key_stage2] = gain_loss_count_stage2
 
-      if hash_key_stage1 not in reward_table.keys():
-          reward_table[hash_key_stage1] = gain_loss_table_stage1
-          reward_count[hash_key_stage1] = gain_loss_count_stage1
+      if hash_key_stage1 not in reward_table_stage1.keys():
+          reward_table_stage1[hash_key_stage1] = gain_loss_table_stage1
+          reward_count_stage1[hash_key_stage1] = gain_loss_count_stage1
       round_number += 1
-      print_progress(round_number, rounds, prefix='Progress:', suffix='Complete', bar_length=40)
+      print_progress(round_number, rounds, prefix='Progress:', suffix='Complete')
 
 
 
-  for key in reward_table.keys():
-      count_fold = reward_count[key][0]
-      count_check = reward_count[key][1]
-      count_bet = reward_count[key][2]
+  for key in reward_table_stage3.keys():
+      count_fold = reward_count_stage3[key][0]
+      count_check = reward_count_stage3[key][1]
+      count_bet = reward_count_stage3[key][2]
       if count_fold!=0:
-        reward_table[key][0] = reward_table[key][0]/count_fold
+        reward_table_stage3[key][0] = reward_table_stage3[key][0]/count_fold
       if count_check!=0:
-          reward_table[key][1] = reward_table[key][1]/count_check
+          reward_table_stage3[key][1] = reward_table_stage3[key][1]/count_check
       if count_bet!=0:
-          reward_table[key][2] = reward_table[key][2]/count_bet
+          reward_table_stage3[key][2] = reward_table_stage3[key][2]/count_bet
 
 
-  return reward_table
+  for key in reward_table_stage2.keys():
+      count_fold = reward_count_stage2[key][0]
+      count_check = reward_count_stage2[key][1]
+      count_bet = reward_count_stage2[key][2]
+      if count_fold!=0:
+        reward_table_stage2[key][0] = reward_table_stage2[key][0]/count_fold
+      if count_check!=0:
+          reward_table_stage2[key][1] = reward_table_stage2[key][1]/count_check
+      if count_bet!=0:
+          reward_table_stage2[key][2] = reward_table_stage2[key][2]/count_bet
+
+  for key in reward_table_stage1.keys():
+      count_fold = reward_count_stage1[key][0]
+      count_check = reward_count_stage1[key][1]
+      count_bet = reward_count_stage1[key][2]
+      if count_fold!=0:
+        reward_table_stage1[key][0] = reward_table_stage1[key][0]/count_fold
+      if count_check!=0:
+          reward_table_stage1[key][1] = reward_table_stage1[key][1]/count_check
+      if count_bet!=0:
+          reward_table_stage1[key][2] = reward_table_stage1[key][2]/count_bet
+
+
+  return reward_table_stage1,reward_table_stage2,reward_table_stage3
 
 def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_length=100):
     """

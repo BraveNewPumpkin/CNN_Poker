@@ -5,12 +5,16 @@ import numpy as np
 import pickle
 
 
-def run(rounds, model):
-    reward_table = dict()
-    reward_count = dict()
+def run(rounds, model1,model2,model3):
+    reward_table_stage1 = dict()
+    reward_count_stage1 = dict()
+    reward_table_stage2 = dict()
+    reward_count_stage2 = dict()
+    reward_table_stage3 = dict()
+    reward_count_stage3 = dict()
     print("running self-play")
     round_number = 0
-    print_progress(round_number, rounds, prefix='Progress:', suffix='Complete', bar_length=40)
+    print_progress(round_number, rounds, prefix='Progress:', suffix='Complete')
     while round_number < rounds:
         deck = Deck()
         evaluator = Evaluator()
@@ -134,91 +138,274 @@ def run(rounds, model):
 
         def betting(model1_player, model2_player, flop1_array, flop2_array, flop3_array, turn_array, river_array, Card1_array_player1,
                     Card2_array_player1, Card1_array_player2, Card2_array_player2, all_card_array_player1, all_card_array_player2,
-                    stage_initial_potsize):
+                    stage_initial_potsize,stage):
+            if stage =="1":
+                pot_array_stage = convert_pot_to_numpy(stage_initial_potsize)
+                state_array_player1 = np.stack(
+                    (flop1_array, flop2_array, flop3_array, Card1_array_player1,
+                     Card2_array_player1, all_card_array_player1, pot_array_stage))
+                state_array_player1 = np.expand_dims(state_array_player1, 0)
 
-            pot_array_stage = convert_pot_to_numpy(stage_initial_potsize)
-            state_array_player1 = np.stack((flop1_array,flop2_array,flop3_array,turn_array,river_array,Card1_array_player1,
-                                            Card2_array_player1,all_card_array_player1,pot_array_stage))
-            state_array_player1 = np.expand_dims(state_array_player1,0)
-
-            input_shape = [9, 17, 17]
-            right_left_pad = input_shape[1] - state_array_player1.shape[2]
-            left_pad = right_left_pad // 2
-            right_pad = left_pad + (right_left_pad % 2)
-            top_bottom_pad = input_shape[2] - state_array_player1.shape[3]
-            top_pad = top_bottom_pad // 2
-            bottom_pad = top_pad + (top_bottom_pad % 2)
-            state_array_player1 = np.pad(state_array_player1, ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
-            y_player1 = Model.predict(model1_player,x=state_array_player1)
-            action_player1 = get_action(y_player1)
-            if action_player1 == "Fold":
-                return "Player 2",stage_initial_potsize,0,0,action_player1,""
-            elif action_player1 == "Check/Call":
-                state_array_player2 = np.stack((flop1_array,flop2_array,flop3_array,turn_array,river_array,
-                                                Card1_array_player2,Card2_array_player2,all_card_array_player2,pot_array_stage))
-                state_array_player2 = np.expand_dims(state_array_player2, 0)
-                right_left_pad = input_shape[1] - state_array_player2.shape[2]
+                input_shape = [7, 17, 17]
+                right_left_pad = input_shape[1] - state_array_player1.shape[2]
                 left_pad = right_left_pad // 2
                 right_pad = left_pad + (right_left_pad % 2)
-                top_bottom_pad = input_shape[2] - state_array_player2.shape[3]
+                top_bottom_pad = input_shape[2] - state_array_player1.shape[3]
                 top_pad = top_bottom_pad // 2
                 bottom_pad = top_pad + (top_bottom_pad % 2)
-                state_array_player2 = np.pad(state_array_player2,
-                                             ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
-                y_player2 = Model.predict(model2_player, x=state_array_player2)
-                action_player2 = get_action(y_player2)
+                state_array_player1 = np.pad(state_array_player1,
+                                             ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)),
+                                             mode='constant')
+                y_player1 = Model.predict(model1_player, x=state_array_player1)
+                action_player1 = get_action(y_player1)
+                if action_player1 == "Fold":
+                    return "Player 2", stage_initial_potsize, 0, 0, action_player1, ""
+                elif action_player1 == "Check/Call":
+                    state_array_player2 = np.stack((flop1_array, flop2_array, flop3_array,
+                                                    Card1_array_player2, Card2_array_player2, all_card_array_player2,
+                                                    pot_array_stage))
+                    state_array_player2 = np.expand_dims(state_array_player2, 0)
+                    right_left_pad = input_shape[1] - state_array_player2.shape[2]
+                    left_pad = right_left_pad // 2
+                    right_pad = left_pad + (right_left_pad % 2)
+                    top_bottom_pad = input_shape[2] - state_array_player2.shape[3]
+                    top_pad = top_bottom_pad // 2
+                    bottom_pad = top_pad + (top_bottom_pad % 2)
+                    state_array_player2 = np.pad(state_array_player2,
+                                                 ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)),
+                                                 mode='constant')
+                    y_player2 = Model.predict(model2_player, x=state_array_player2)
+                    action_player2 = get_action(y_player2)
 
-                if action_player2 == "Fold":
-                    return "Player 1",stage_initial_potsize,0,0,action_player1,action_player2
-                elif action_player2 == "Check/Call":
-                    return "",stage_initial_potsize,0,0,action_player1,action_player2
+                    if action_player2 == "Fold":
+                        return "Player 1", stage_initial_potsize, 0, 0, action_player1, action_player2
+                    elif action_player2 == "Check/Call":
+                        return "", stage_initial_potsize, 0, 0, action_player1, action_player2
+                    else:
+                        stage_initial_potsize += 100
+                        pot_array_stage = convert_pot_to_numpy(stage_initial_potsize)
+                        state_array_player1 = np.stack((flop1_array, flop2_array, flop3_array,
+                                                        Card1_array_player1, Card2_array_player1,
+                                                        all_card_array_player1,
+                                                        pot_array_stage))
+                        state_array_player1 = np.expand_dims(state_array_player1, 0)
+                        right_left_pad = input_shape[1] - state_array_player1.shape[2]
+                        left_pad = right_left_pad // 2
+                        right_pad = left_pad + (right_left_pad % 2)
+                        top_bottom_pad = input_shape[2] - state_array_player1.shape[3]
+                        top_pad = top_bottom_pad // 2
+                        bottom_pad = top_pad + (top_bottom_pad % 2)
+                        state_array_player1 = np.pad(state_array_player1,
+                                                     ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)),
+                                                     mode='constant')
+                        y_player1 = Model.predict(model1_player, x=state_array_player1)
+                        action_player1 = get_action_position2(y_player1, "Bet/Raise")
+                        if action_player1 == "Fold":
+                            return "Player 2", stage_initial_potsize, 0, 100, action_player1, action_player2
+                        else:
+                            return "", stage_initial_potsize + 100, 100, 100, action_player1, action_player2
                 else:
                     stage_initial_potsize += 100
                     pot_array_stage = convert_pot_to_numpy(stage_initial_potsize)
-                    state_array_player1 = np.stack((flop1_array, flop2_array, flop3_array,turn_array,river_array,
-                                                    Card1_array_player1,Card2_array_player1, all_card_array_player1,
-                                                    pot_array_stage))
-                    state_array_player1 = np.expand_dims(state_array_player1, 0)
-                    right_left_pad = input_shape[1] - state_array_player1.shape[2]
+                    state_array_player2 = np.stack(
+                        (flop1_array, flop2_array, flop3_array, Card1_array_player2
+                         , Card2_array_player2, all_card_array_player2, pot_array_stage))
+                    state_array_player2 = np.expand_dims(state_array_player2, 0)
+                    right_left_pad = input_shape[1] - state_array_player2.shape[2]
                     left_pad = right_left_pad // 2
                     right_pad = left_pad + (right_left_pad % 2)
-                    top_bottom_pad = input_shape[2] - state_array_player1.shape[3]
+                    top_bottom_pad = input_shape[2] - state_array_player2.shape[3]
                     top_pad = top_bottom_pad // 2
                     bottom_pad = top_pad + (top_bottom_pad % 2)
-                    state_array_player1 = np.pad(state_array_player1,
+                    state_array_player2 = np.pad(state_array_player2,
                                                  ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)),
                                                  mode='constant')
-                    y_player1 = Model.predict(model1_player, x=state_array_player1)
-                    action_player1 = get_action_position2(y_player1,"Bet/Raise")
-                    if action_player1 == "Fold":
-                        return "Player 2",stage_initial_potsize,0,100,action_player1,action_player2
+                    y_player2 = Model.predict(model2_player, x=state_array_player2)
+                    # print(y_player2)
+                    action_player2 = get_action_position2(y_player2, "Bet/Raise")
+                    if action_player2 == "Fold":
+                        return "Player 1", stage_initial_potsize, 100, 0, action_player1, action_player2
                     else:
-                        return "",stage_initial_potsize+100,100,100,action_player1,action_player2
-            else:
-                stage_initial_potsize += 100
+                        return "", stage_initial_potsize + 100, 100, 100, action_player1, action_player2
+            elif stage == "2":
+
                 pot_array_stage = convert_pot_to_numpy(stage_initial_potsize)
-                state_array_player2 = np.stack((flop1_array, flop2_array, flop3_array,turn_array,river_array,Card1_array_player2
-                                                , Card2_array_player2, all_card_array_player2, pot_array_stage))
-                state_array_player2 = np.expand_dims(state_array_player2, 0)
-                right_left_pad = input_shape[1] - state_array_player2.shape[2]
+                state_array_player1 = np.stack(
+                    (flop1_array, flop2_array, flop3_array, turn_array, Card1_array_player1,
+                     Card2_array_player1, all_card_array_player1, pot_array_stage))
+                state_array_player1 = np.expand_dims(state_array_player1, 0)
+
+                input_shape = [8, 17, 17]
+                right_left_pad = input_shape[1] - state_array_player1.shape[2]
                 left_pad = right_left_pad // 2
                 right_pad = left_pad + (right_left_pad % 2)
-                top_bottom_pad = input_shape[2] - state_array_player2.shape[3]
+                top_bottom_pad = input_shape[2] - state_array_player1.shape[3]
                 top_pad = top_bottom_pad // 2
                 bottom_pad = top_pad + (top_bottom_pad % 2)
-                state_array_player2 = np.pad(state_array_player2,
-                                             ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
-                y_player2 = Model.predict(model2_player, x=state_array_player2)
-                # print(y_player2)
-                action_player2 = get_action_position2(y_player2,"Bet/Raise")
-                if action_player2 == "Fold":
-                    return "Player 1",stage_initial_potsize,100,0,action_player1,action_player2
+                state_array_player1 = np.pad(state_array_player1,
+                                             ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)),
+                                             mode='constant')
+                y_player1 = Model.predict(model1_player, x=state_array_player1)
+                action_player1 = get_action(y_player1)
+                if action_player1 == "Fold":
+                    return "Player 2", stage_initial_potsize, 0, 0, action_player1, ""
+                elif action_player1 == "Check/Call":
+                    state_array_player2 = np.stack((flop1_array, flop2_array, flop3_array, turn_array,
+                                                    Card1_array_player2, Card2_array_player2, all_card_array_player2,
+                                                    pot_array_stage))
+                    state_array_player2 = np.expand_dims(state_array_player2, 0)
+                    right_left_pad = input_shape[1] - state_array_player2.shape[2]
+                    left_pad = right_left_pad // 2
+                    right_pad = left_pad + (right_left_pad % 2)
+                    top_bottom_pad = input_shape[2] - state_array_player2.shape[3]
+                    top_pad = top_bottom_pad // 2
+                    bottom_pad = top_pad + (top_bottom_pad % 2)
+                    state_array_player2 = np.pad(state_array_player2,
+                                                 ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)),
+                                                 mode='constant')
+                    y_player2 = Model.predict(model2_player, x=state_array_player2)
+                    action_player2 = get_action(y_player2)
+
+                    if action_player2 == "Fold":
+                        return "Player 1", stage_initial_potsize, 0, 0, action_player1, action_player2
+                    elif action_player2 == "Check/Call":
+                        return "", stage_initial_potsize, 0, 0, action_player1, action_player2
+                    else:
+                        stage_initial_potsize += 100
+                        pot_array_stage = convert_pot_to_numpy(stage_initial_potsize)
+                        state_array_player1 = np.stack((flop1_array, flop2_array, flop3_array, turn_array,
+                                                        Card1_array_player1, Card2_array_player1,
+                                                        all_card_array_player1,
+                                                        pot_array_stage))
+                        state_array_player1 = np.expand_dims(state_array_player1, 0)
+                        right_left_pad = input_shape[1] - state_array_player1.shape[2]
+                        left_pad = right_left_pad // 2
+                        right_pad = left_pad + (right_left_pad % 2)
+                        top_bottom_pad = input_shape[2] - state_array_player1.shape[3]
+                        top_pad = top_bottom_pad // 2
+                        bottom_pad = top_pad + (top_bottom_pad % 2)
+                        state_array_player1 = np.pad(state_array_player1,
+                                                     ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)),
+                                                     mode='constant')
+                        y_player1 = Model.predict(model1_player, x=state_array_player1)
+                        action_player1 = get_action_position2(y_player1, "Bet/Raise")
+                        if action_player1 == "Fold":
+                            return "Player 2", stage_initial_potsize, 0, 100, action_player1, action_player2
+                        else:
+                            return "", stage_initial_potsize + 100, 100, 100, action_player1, action_player2
                 else:
-                    return "", stage_initial_potsize+100,100,100,action_player1,action_player2
+                    stage_initial_potsize += 100
+                    pot_array_stage = convert_pot_to_numpy(stage_initial_potsize)
+                    state_array_player2 = np.stack(
+                        (flop1_array, flop2_array, flop3_array, turn_array,  Card1_array_player2
+                         , Card2_array_player2, all_card_array_player2, pot_array_stage))
+                    state_array_player2 = np.expand_dims(state_array_player2, 0)
+                    right_left_pad = input_shape[1] - state_array_player2.shape[2]
+                    left_pad = right_left_pad // 2
+                    right_pad = left_pad + (right_left_pad % 2)
+                    top_bottom_pad = input_shape[2] - state_array_player2.shape[3]
+                    top_pad = top_bottom_pad // 2
+                    bottom_pad = top_pad + (top_bottom_pad % 2)
+                    state_array_player2 = np.pad(state_array_player2,
+                                                 ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)),
+                                                 mode='constant')
+                    y_player2 = Model.predict(model2_player, x=state_array_player2)
+                    # print(y_player2)
+                    action_player2 = get_action_position2(y_player2, "Bet/Raise")
+                    if action_player2 == "Fold":
+                        return "Player 1", stage_initial_potsize, 100, 0, action_player1, action_player2
+                    else:
+                        return "", stage_initial_potsize + 100, 100, 100, action_player1, action_player2
+            else:
+
+                pot_array_stage = convert_pot_to_numpy(stage_initial_potsize)
+                state_array_player1 = np.stack((flop1_array,flop2_array,flop3_array,turn_array,river_array,Card1_array_player1,
+                                                Card2_array_player1,all_card_array_player1,pot_array_stage))
+                state_array_player1 = np.expand_dims(state_array_player1,0)
+
+                input_shape = [9, 17, 17]
+                right_left_pad = input_shape[1] - state_array_player1.shape[2]
+                left_pad = right_left_pad // 2
+                right_pad = left_pad + (right_left_pad % 2)
+                top_bottom_pad = input_shape[2] - state_array_player1.shape[3]
+                top_pad = top_bottom_pad // 2
+                bottom_pad = top_pad + (top_bottom_pad % 2)
+                state_array_player1 = np.pad(state_array_player1, ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
+                y_player1 = Model.predict(model1_player,x=state_array_player1)
+                action_player1 = get_action(y_player1)
+                if action_player1 == "Fold":
+                    return "Player 2",stage_initial_potsize,0,0,action_player1,""
+                elif action_player1 == "Check/Call":
+                    state_array_player2 = np.stack((flop1_array,flop2_array,flop3_array,turn_array,river_array,
+                                                    Card1_array_player2,Card2_array_player2,all_card_array_player2,pot_array_stage))
+                    state_array_player2 = np.expand_dims(state_array_player2, 0)
+                    right_left_pad = input_shape[1] - state_array_player2.shape[2]
+                    left_pad = right_left_pad // 2
+                    right_pad = left_pad + (right_left_pad % 2)
+                    top_bottom_pad = input_shape[2] - state_array_player2.shape[3]
+                    top_pad = top_bottom_pad // 2
+                    bottom_pad = top_pad + (top_bottom_pad % 2)
+                    state_array_player2 = np.pad(state_array_player2,
+                                                 ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
+                    y_player2 = Model.predict(model2_player, x=state_array_player2)
+                    action_player2 = get_action(y_player2)
+
+                    if action_player2 == "Fold":
+                        return "Player 1",stage_initial_potsize,0,0,action_player1,action_player2
+                    elif action_player2 == "Check/Call":
+                        return "",stage_initial_potsize,0,0,action_player1,action_player2
+                    else:
+                        stage_initial_potsize += 100
+                        pot_array_stage = convert_pot_to_numpy(stage_initial_potsize)
+                        state_array_player1 = np.stack((flop1_array, flop2_array, flop3_array,turn_array,river_array,
+                                                        Card1_array_player1,Card2_array_player1, all_card_array_player1,
+                                                        pot_array_stage))
+                        state_array_player1 = np.expand_dims(state_array_player1, 0)
+                        right_left_pad = input_shape[1] - state_array_player1.shape[2]
+                        left_pad = right_left_pad // 2
+                        right_pad = left_pad + (right_left_pad % 2)
+                        top_bottom_pad = input_shape[2] - state_array_player1.shape[3]
+                        top_pad = top_bottom_pad // 2
+                        bottom_pad = top_pad + (top_bottom_pad % 2)
+                        state_array_player1 = np.pad(state_array_player1,
+                                                     ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)),
+                                                     mode='constant')
+                        y_player1 = Model.predict(model1_player, x=state_array_player1)
+                        action_player1 = get_action_position2(y_player1,"Bet/Raise")
+                        if action_player1 == "Fold":
+                            return "Player 2",stage_initial_potsize,0,100,action_player1,action_player2
+                        else:
+                            return "",stage_initial_potsize+100,100,100,action_player1,action_player2
+                else:
+                    stage_initial_potsize += 100
+                    pot_array_stage = convert_pot_to_numpy(stage_initial_potsize)
+                    state_array_player2 = np.stack((flop1_array, flop2_array, flop3_array,turn_array,river_array,Card1_array_player2
+                                                    , Card2_array_player2, all_card_array_player2, pot_array_stage))
+                    state_array_player2 = np.expand_dims(state_array_player2, 0)
+                    right_left_pad = input_shape[1] - state_array_player2.shape[2]
+                    left_pad = right_left_pad // 2
+                    right_pad = left_pad + (right_left_pad % 2)
+                    top_bottom_pad = input_shape[2] - state_array_player2.shape[3]
+                    top_pad = top_bottom_pad // 2
+                    bottom_pad = top_pad + (top_bottom_pad % 2)
+                    state_array_player2 = np.pad(state_array_player2,
+                                                 ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
+                    y_player2 = Model.predict(model2_player, x=state_array_player2)
+                    # print(y_player2)
+                    action_player2 = get_action_position2(y_player2,"Bet/Raise")
+                    if action_player2 == "Fold":
+                        return "Player 1",stage_initial_potsize,100,0,action_player1,action_player2
+                    else:
+                        return "", stage_initial_potsize+100,100,100,action_player1,action_player2
 
 
-        model_player1 = model
-        model_player2 = model
+        model_player1_stage1 = model1
+        model_player1_stage2 = model2
+        model_player1_stage3 = model3
+
+        model_player2_stage1 = model1
+        model_player2_stage2 = model2
+        model_player2_stage3 = model3
 
         player1_bet = 0
         player2_bet = 0
@@ -236,22 +423,25 @@ def run(rounds, model):
                                                                                                    all_card_array_player2)
         turn_array = np.zeros((4,13))
         river_array = np.zeros((4,13))
+        stage = "1"
+
         Card6_array_player1,all_card_array_player1 = convert_to_numpy_array_playercards(Card.int_to_str(player1_hand[0]),all_card_array_player1)
         Card7_array_player1,all_card_array_player1 = convert_to_numpy_array_playercards(Card.int_to_str(player1_hand[1]),all_card_array_player1)
 
         Card6_array_player2,all_card_array_player2 = convert_to_numpy_array_playercards(Card.int_to_str(player2_hand[0]),all_card_array_player2)
         Card7_array_player2,all_card_array_player2 = convert_to_numpy_array_playercards(Card.int_to_str(player2_hand[1]),all_card_array_player2)
         pot_array_stage1 = convert_pot_to_numpy(total_pot_size)
-        state_array_player1_stage1 = np.stack((flop1_array,flop2_array,flop3_array,turn_array,river_array,Card6_array_player1,
+        state_array_player1_stage1 = np.stack((flop1_array,flop2_array,flop3_array,Card6_array_player1,
                                             Card7_array_player1,all_card_array_player1,pot_array_stage1))
 
+
         hash_key_stage1 = pickle.dumps(state_array_player1_stage1)
-        gain_loss_stage1 = np.zeros((3))
-        gain_loss_stage1_count = np.zeros((3))
-        winner,pot_size,player1_new_bet,player2_new_bet,player1_action_stage1,player2_action = betting(model_player1,model_player2,flop1_array,flop2_array,flop3_array,
+        gain_loss_table_stage1 = np.zeros((3))
+        gain_loss_count_stage1 = np.zeros((3))
+        winner,pot_size,player1_new_bet,player2_new_bet,player1_action_stage1,player2_action = betting(model_player1_stage1,model_player2_stage1,flop1_array,flop2_array,flop3_array,
                                                                   turn_array,river_array,Card6_array_player1,Card7_array_player1,
                                                                   Card6_array_player2,Card7_array_player2,all_card_array_player1,
-                                                                  all_card_array_player2,total_pot_size)
+                                                                  all_card_array_player2,total_pot_size,stage)
         total_pot_size += pot_size
         player1_bet += player1_new_bet
         player2_bet += player2_new_bet
@@ -260,50 +450,54 @@ def run(rounds, model):
             # print("Player 1 Wins!!",total_pot_size)
             # print("Player 1 Gain!!",int(total_pot_size-player1_bet))
             if player1_action_stage1 == "Bet/Raise":
-                if hash_key_stage1 in reward_table.keys():
-                    reward_table[hash_key_stage1][2] += int(total_pot_size-player1_bet)
-                    reward_count[hash_key_stage1][2] += 1
+                if hash_key_stage1 in reward_table_stage1.keys():
+                    reward_table_stage1[hash_key_stage1][2] += int(total_pot_size - player1_bet)
+                    reward_count_stage1[hash_key_stage1][2] += 1
                 else:
-                    gain_loss_stage1[2] += int(total_pot_size-player1_bet)
-                    gain_loss_stage1_count[2] += 1
+                    gain_loss_count_stage1[2] += 1
+                    gain_loss_table_stage1[2] += int(total_pot_size - player1_bet)
+
             elif player1_action_stage1 == "Check/Call":
-                if hash_key_stage1 in reward_table.keys():
-                    reward_table[hash_key_stage1][1] += int(total_pot_size-player1_bet)
-                    reward_count[hash_key_stage1][1] += 1
+                if hash_key_stage1 in reward_table_stage1.keys():
+                    reward_table_stage1[hash_key_stage1][1] += int(total_pot_size - player1_bet)
+                    reward_count_stage1[hash_key_stage1][1] += 1
                 else:
-                    gain_loss_stage1[1] += int(total_pot_size-player1_bet)
-                    gain_loss_stage1_count[1] += 1
+                    gain_loss_count_stage1[1] += 1
+                    gain_loss_table_stage1[1] += int(total_pot_size - player1_bet)
 
 
         elif winner == "Player 2":
             # print("Player 2 Wins!!",total_pot_size)
             # print("Player 2 Gain!!",int(total_pot_size-player2_bet))
-            if player1_action_stage1 == "Fold":
-                if hash_key_stage1 in reward_table.keys():
-                    reward_table[hash_key_stage1][0] = -1*int(player1_bet)
-                    reward_count[hash_key_stage1][0] += 1
-                else:
-                    gain_loss_stage1[0] = -1*int(player1_bet)
-                    gain_loss_stage1_count[0] = 1
+            if hash_key_stage1 in reward_table_stage1.keys():
+                if player1_action_stage1 == "Fold":
+                    reward_table_stage1[hash_key_stage1][0] += -1 * int(player1_bet)
+                    reward_count_stage1[hash_key_stage1][0] += 1
+            else:
+                if player1_action_stage1 == "Fold":
+                    gain_loss_table_stage1[0] = -1 * int(player1_bet)
+                    gain_loss_count_stage1[0] += 1
 
 
         else:
             turn_array,all_card_array_player1,all_card_array_player2 = convert_to_numpy_array(Card.int_to_str(turn),all_card_array_player1,all_card_array_player2)
             pot_array_stage2 = convert_pot_to_numpy(total_pot_size)
+            river_array = np.zeros((4,13))
+            stage="2"
             state_array_player1_stage2 = np.stack(
-                (flop1_array, flop2_array, flop3_array, turn_array, river_array, Card6_array_player1,
+                (flop1_array, flop2_array, flop3_array, turn_array,  Card6_array_player1,
                  Card7_array_player1, all_card_array_player1, pot_array_stage2))
 
             hash_key_stage2 = pickle.dumps(state_array_player1_stage2)
-            gain_loss_stage2 = np.zeros((3))
-            gain_loss_stage2_count = np.zeros((3))
-            winner, pot_size, player1_new_bet, player2_new_bet,player1_action_stage2,player2_action = betting(model_player1, model_player2, flop1_array, flop2_array,
+            gain_loss_table_stage2 = np.zeros((3))
+            gain_loss_count_stage2 = np.zeros((3))
+            winner, pot_size, player1_new_bet, player2_new_bet,player1_action_stage2,player2_action = betting(model_player1_stage2, model_player2_stage2, flop1_array, flop2_array,
                                                                          flop3_array,
-                                                                         turn_array, river_array, Card6_array_player1,
+                                                                         turn_array,river_array,Card6_array_player1,
                                                                          Card7_array_player1,
                                                                          Card6_array_player2, Card7_array_player2,
                                                                          all_card_array_player1,
-                                                                         all_card_array_player2, total_pot_size)
+                                                                         all_card_array_player2, total_pot_size,stage)
 
             total_pot_size += pot_size
             player1_bet += player1_new_bet
@@ -313,79 +507,84 @@ def run(rounds, model):
                 # print("Player 1 Wins!!", total_pot_size)
                 # print("Player 1 Gain!!", int(total_pot_size - player1_bet))
                 if player1_action_stage2 == "Bet/Raise":
-                    if hash_key_stage2 in reward_table.keys():
-                        reward_table[hash_key_stage2][2] += int(total_pot_size - player1_bet)
-                        reward_count[hash_key_stage2][2] += 1
+                    if hash_key_stage2 in reward_table_stage2.keys():
+                        reward_table_stage2[hash_key_stage2][2] += int(total_pot_size - player1_bet)
+                        reward_count_stage2[hash_key_stage2][2] += 1
                     else:
-                        gain_loss_stage2[2] = int(total_pot_size - player1_bet)
-                        gain_loss_stage2_count[2] = 1
+                        gain_loss_count_stage2[2] += 1
+                        gain_loss_table_stage2[2] += int(total_pot_size - player1_bet)
+
                 elif player1_action_stage2 == "Check/Call":
-                    if hash_key_stage2 in reward_table.keys():
-                        reward_table[hash_key_stage2][1] += int(total_pot_size - player1_bet)
-                        reward_count[hash_key_stage2][1] += 1
+                    if hash_key_stage2 in reward_table_stage2.keys():
+                        reward_table_stage2[hash_key_stage2][1] += int(total_pot_size - player1_bet)
+                        reward_count_stage2[hash_key_stage2][1] += 1
                     else:
-                        gain_loss_stage2[1] = int(total_pot_size - player1_bet)
-                        gain_loss_stage2_count[1] = 1
+                        gain_loss_count_stage2[1] += 1
+                        gain_loss_table_stage2[1] += int(total_pot_size - player1_bet)
                 if player1_action_stage1 == "Bet/Raise":
-                    if hash_key_stage1 in reward_table.keys():
-                        reward_table[hash_key_stage1][2] += int(total_pot_size - player1_bet)
-                        reward_count[hash_key_stage1][2] += 1
+                    if hash_key_stage1 in reward_table_stage1.keys():
+                        reward_table_stage1[hash_key_stage1][2] += int(total_pot_size - player1_bet)
+                        reward_count_stage1[hash_key_stage1][2] += 1
                     else:
-                        gain_loss_stage1[2] = int(total_pot_size - player1_bet)
-                        gain_loss_stage1_count[2] = 1
+                        gain_loss_count_stage1[2] += 1
+                        gain_loss_table_stage1[2] += int(total_pot_size - player1_bet)
+
                 elif player1_action_stage1 == "Check/Call":
-                    if hash_key_stage1 in reward_table.keys():
-                        reward_table[hash_key_stage1][1] += int(total_pot_size - player1_bet)
-                        reward_count[hash_key_stage1][1] += 1
+                    if hash_key_stage1 in reward_table_stage1.keys():
+                        reward_table_stage1[hash_key_stage1][1] += int(total_pot_size - player1_bet)
+                        reward_count_stage1[hash_key_stage1][1] += 1
                     else:
-                        gain_loss_stage1[1] = int(total_pot_size - player1_bet)
-                        gain_loss_stage1_count[1] = 1
+                        gain_loss_count_stage1[1] += 1
+                        gain_loss_table_stage1[1] += int(total_pot_size - player1_bet)
 
             elif winner == "Player 2":
                 # print("Player 2 Wins!!", total_pot_size)
                 # print("Player 2 Gain!!", int(total_pot_size - player2_bet))
-                if player1_action_stage2 == "Fold":
-                    if hash_key_stage2 in reward_table.keys():
-                        reward_table[hash_key_stage2][0] = -1 * int(player1_bet)
-                        reward_count[hash_key_stage2][0] += 1
-                    else:
-                        gain_loss_stage2[0] = -1 * int(player1_bet)
-                        gain_loss_stage2_count[0] += 1
+                if hash_key_stage2 in reward_table_stage2.keys():
+                    if player1_action_stage2 == "Fold":
+                        reward_table_stage2[hash_key_stage2][0] += -1 * int(player1_bet)
+                        reward_count_stage2[hash_key_stage2][0] += 1
+                else:
+                    if player1_action_stage2 == "Fold":
+                        gain_loss_table_stage2[0] = -1 * int(player1_bet)
+                        gain_loss_count_stage2[0] += 1
                 if player1_action_stage1 == "Bet/Raise":
-                    if hash_key_stage1 in reward_table.keys():
-                        reward_table[hash_key_stage1][2] += -1 * int(player1_bet)
-                        reward_count[hash_key_stage1][2] += 1
+                    if hash_key_stage1 in reward_table_stage1.keys():
+                        reward_table_stage1[hash_key_stage1][2] += int(total_pot_size - player1_bet)
+                        reward_count_stage1[hash_key_stage1][2] += 1
                     else:
-                        gain_loss_stage1[2] = -1 * int(player1_bet)
-                        gain_loss_stage1_count[2] = 1
+                        gain_loss_count_stage1[2] += 1
+                        gain_loss_table_stage1[2] += int(total_pot_size - player1_bet)
+
                 elif player1_action_stage1 == "Check/Call":
-                    if hash_key_stage1 in reward_table.keys():
-                        reward_table[hash_key_stage1][1] += -1 * int(player1_bet)
-                        reward_count[hash_key_stage1][1] += 1
+                    if hash_key_stage1 in reward_table_stage1.keys():
+                        reward_table_stage1[hash_key_stage1][1] += -1 * int(player1_bet)
+                        reward_count_stage1[hash_key_stage1][1] += 1
                     else:
-                        gain_loss_stage1[1] = -1 * int(player1_bet)
-                        gain_loss_stage1_count[1] = 1
+                        gain_loss_count_stage1[1] += 1
+                        gain_loss_table_stage1[1] += -1 * int(player1_bet)
 
             else:
+                stage="3"
                 river_array, all_card_array_player1, all_card_array_player2 = convert_to_numpy_array(Card.int_to_str(river),
                                                                                                     all_card_array_player1,
                                                                                                     all_card_array_player2)
-                winner, pot_size, player1_new_bet, player2_new_bet,player1_action_stage3,player2_action = betting(model_player1, model_player2, flop1_array,
+                winner, pot_size, player1_new_bet, player2_new_bet,player1_action_stage3,player2_action = betting(model_player1_stage3, model_player2_stage3, flop1_array,
                                                                              flop2_array,
                                                                              flop3_array,
                                                                              turn_array, river_array, Card6_array_player1,
                                                                              Card7_array_player1,
                                                                              Card6_array_player2, Card7_array_player2,
                                                                              all_card_array_player1,
-                                                                             all_card_array_player2, total_pot_size)
+                                                                             all_card_array_player2, total_pot_size,stage)
                 pot_array_stage3 = convert_pot_to_numpy(total_pot_size)
                 state_array_player1_stage3 = np.stack(
                     (flop1_array, flop2_array, flop3_array, turn_array, river_array, Card6_array_player1,
                      Card7_array_player1, all_card_array_player1, pot_array_stage3))
 
                 hash_key_stage3 = pickle.dumps(state_array_player1_stage3)
-                gain_loss_stage3 = np.zeros((3))
-                gain_loss_stage3_count = np.zeros((3))
+                gain_loss_table_stage3 = np.zeros((3))
+                gain_loss_count_stage3 = np.zeros((3))
 
                 total_pot_size += pot_size
                 player1_bet += player1_new_bet
@@ -394,89 +593,97 @@ def run(rounds, model):
                 if winner == "Player 1":
                     # print("Player 1 Wins!!", total_pot_size)
                     # print("Player 1 Gain!!", int(total_pot_size - player1_bet))
-                    if player1_action_stage3 == "Bet/Raise":
-                        if hash_key_stage3 in reward_table.keys():
-                            reward_table[hash_key_stage3][2] += int(total_pot_size - player1_bet)
-                            reward_count[hash_key_stage3][2] += 1
-                        else:
-                            gain_loss_stage3[2] = int(total_pot_size - player1_bet)
-                            gain_loss_stage3_count[2] = 1
-                    elif player1_action_stage3 == "Check/Call":
-                        if hash_key_stage3 in reward_table.keys():
-                            reward_table[hash_key_stage3][1] += int(total_pot_size - player1_bet)
-                            reward_count[hash_key_stage3][1] += 1
-                        else:
-                            gain_loss_stage3[1] = int(total_pot_size - player1_bet)
-                            gain_loss_stage3_count[1] = 1
-                    if player1_action_stage1 == "Bet/Raise":
-                        if hash_key_stage1 in reward_table.keys():
-                            reward_table[hash_key_stage1][2] += int(total_pot_size - player1_bet)
-                            reward_count[hash_key_stage1][2] += 1
-                        else:
-                            gain_loss_stage1[2] = int(total_pot_size - player1_bet)
-                            gain_loss_stage1_count[2] = 1
-                    elif player1_action_stage1 == "Check/Call":
-                        if hash_key_stage1 in reward_table.keys():
-                            reward_table[hash_key_stage1][1] += int(total_pot_size - player1_bet)
-                            reward_count[hash_key_stage1][1] += 1
-                        else:
-                            gain_loss_stage1[1] = int(total_pot_size - player1_bet)
-                            gain_loss_stage1_count[1] = 1
+                    if hash_key_stage3 in reward_table_stage3.keys():
+
+                        if player1_action_stage3 == "Check/Call":
+                            reward_table_stage3[hash_key_stage3][1] += int(total_pot_size - player1_bet)
+                            reward_count_stage3[hash_key_stage3][1] += 1
+                        elif player1_action_stage3 == "Bet/Raise":
+                            reward_table_stage3[hash_key_stage3][2] += int(total_pot_size - player1_bet)
+                            reward_count_stage3[hash_key_stage3][2] += 1
+                    else:
+                        if player1_action_stage3 == "Check/Call":
+                            gain_loss_table_stage3[1] = int(total_pot_size - player1_bet)
+                            gain_loss_count_stage3[1] += 1
+                        elif player1_action_stage3 == "Bet/Raise":
+                            gain_loss_table_stage3[2] = int(total_pot_size - player1_bet)
+                            gain_loss_count_stage3[2] += 1
+
                     if player1_action_stage2 == "Bet/Raise":
-                        if hash_key_stage2 in reward_table.keys():
-                            reward_table[hash_key_stage2][2] += int(total_pot_size - player1_bet)
-                            reward_count[hash_key_stage2][2] += 1
+                        if hash_key_stage2 in reward_table_stage2.keys():
+                            reward_table_stage2[hash_key_stage2][2] += int(total_pot_size - player1_bet)
+                            reward_count_stage2[hash_key_stage2][2] += 1
                         else:
-                            gain_loss_stage2[2] = int(total_pot_size - player1_bet)
-                            gain_loss_stage2_count[2] = 1
+                            gain_loss_count_stage2[2] += 1
+                            gain_loss_table_stage2[2] += int(total_pot_size - player1_bet)
+
                     elif player1_action_stage2 == "Check/Call":
-                        if hash_key_stage2 in reward_table.keys():
-                            reward_table[hash_key_stage2][1] += int(total_pot_size - player1_bet)
-                            reward_count[hash_key_stage2][1] += 1
+                        if hash_key_stage2 in reward_table_stage2.keys():
+                            reward_table_stage2[hash_key_stage2][1] += int(total_pot_size - player1_bet)
+                            reward_count_stage2[hash_key_stage2][1] += 1
                         else:
-                            gain_loss_stage2[1] = int(total_pot_size - player1_bet)
-                            gain_loss_stage2_count[1] = 1
+                            gain_loss_count_stage2[1] += 1
+                            gain_loss_table_stage2[1] += int(total_pot_size - player1_bet)
+
+                    if player1_action_stage1 == "Bet/Raise":
+                        if hash_key_stage1 in reward_table_stage1.keys():
+                            reward_table_stage1[hash_key_stage1][2] += int(total_pot_size - player1_bet)
+                            reward_count_stage1[hash_key_stage1][2] += 1
+                        else:
+                            gain_loss_count_stage1[2] += 1
+                            gain_loss_table_stage1[2] += int(total_pot_size - player1_bet)
+
+                    elif player1_action_stage1 == "Check/Call":
+                        if hash_key_stage1 in reward_table_stage1.keys():
+                            reward_table_stage1[hash_key_stage1][1] += int(total_pot_size - player1_bet)
+                            reward_count_stage1[hash_key_stage1][1] += 1
+                        else:
+                            gain_loss_count_stage1[1] += 1
+                            gain_loss_table_stage1[1] += int(total_pot_size - player1_bet)
 
                 elif winner == "Player 2":
                     # print("Player 2 Wins!!", total_pot_size)
                     # print("Player 2 Gain!!", int(total_pot_size - player2_bet))
-                    if player1_action_stage3 == "Fold":
-                        if hash_key_stage3 in reward_table.keys():
-                            reward_table[hash_key_stage3][0] = -1 * int(player1_bet)
-                            reward_count[hash_key_stage3][0] += 1
+                    if hash_key_stage3 in reward_table_stage3.keys():
+                        if player1_action_stage3 == "Fold":
+                            reward_table_stage3[hash_key_stage3][0] += -1 * int(player1_bet)
+                            reward_count_stage3[hash_key_stage3][0] += 1
+                    else:
+                        if player1_action_stage3 == "Fold":
+                            gain_loss_table_stage3[0] = -1 * int(player1_bet)
+                            gain_loss_count_stage3[0] += 1
+                    if player1_action_stage2 == "Bet/Raise":
+                        if hash_key_stage2 in reward_table_stage2.keys():
+                            reward_table_stage2[hash_key_stage2][2] += -1 * int(player1_bet)
+                            reward_count_stage2[hash_key_stage2][2] += 1
                         else:
-                            gain_loss_stage3[0] = -1 * int(player1_bet)
-                            gain_loss_stage3_count[0] += 1
+                            gain_loss_count_stage2[2] += 1
+                            gain_loss_table_stage2[2] += -1 * int(player1_bet)
+
+                    elif player1_action_stage2 == "Check/Call":
+                        if hash_key_stage2 in reward_table_stage2.keys():
+                            reward_table_stage2[hash_key_stage2][1] += -1 * int(player1_bet)
+                            reward_count_stage2[hash_key_stage2][1] += 1
+                        else:
+                            gain_loss_count_stage2[1] += 1
+                            gain_loss_table_stage2[1] += -1 * int(player1_bet)
 
                     if player1_action_stage1 == "Bet/Raise":
-                        if hash_key_stage1 in reward_table.keys():
-                            reward_table[hash_key_stage1][2] += -1 * int(player1_bet)
-                            reward_count[hash_key_stage1][2] += 1
+                        if hash_key_stage1 in reward_table_stage1.keys():
+                            reward_table_stage1[hash_key_stage1][2] += -1 * int(player1_bet)
+                            reward_count_stage1[hash_key_stage1][2] += 1
                         else:
-                            gain_loss_stage1[2] = -1 * int(player1_bet)
-                            gain_loss_stage1_count[2] = 1
-                    elif player1_action_stage1 == "Check/Call":
-                        if hash_key_stage1 in reward_table.keys():
-                            reward_table[hash_key_stage1][1] += -1 * int(player1_bet)
-                            reward_count[hash_key_stage1][1] += 1
-                        else:
-                            gain_loss_stage1[1] = -1 * int(player1_bet)
-                            gain_loss_stage1_count[1] = 1
+                            gain_loss_count_stage1[2] += 1
+                            gain_loss_table_stage1[2] += -1 * int(player1_bet)
 
-                    if player1_action_stage2 == "Bet/Raise":
-                        if hash_key_stage2 in reward_table.keys():
-                            reward_table[hash_key_stage2][2] += -1 * int(player1_bet)
-                            reward_count[hash_key_stage2][2] += 1
+                    elif player1_action_stage1 == "Check/Call":
+                        if hash_key_stage1 in reward_table_stage1.keys():
+                            reward_table_stage1[hash_key_stage1][1] += -1 * int(player1_bet)
+                            reward_count_stage1[hash_key_stage1][1] += 1
                         else:
-                            gain_loss_stage2[2] = -1 * int(player1_bet)
-                            gain_loss_stage2_count[2] = 1
-                    elif player1_action_stage2 == "Check/Call":
-                        if hash_key_stage2 in reward_table.keys():
-                            reward_table[hash_key_stage2][1] += -1 * int(player1_bet)
-                            reward_count[hash_key_stage2][1] += 1
-                        else:
-                            gain_loss_stage2[1] = -1 * int(player1_bet)
-                            gain_loss_stage2_count[1] = 1
+                            gain_loss_count_stage1[1] += 1
+                            gain_loss_table_stage1[1] += -1 * int(player1_bet)
+
 
                 else:
                     final_score_player1 = evaluator.get_rank_class(evaluator._seven(player1_complete_hand))
@@ -484,117 +691,152 @@ def run(rounds, model):
                     if final_score_player1 > final_score_player2:
                         # print("Player 1 Wins!!",total_pot_size)
                         # print("Player 1 Gain!!",int(total_pot_size - player1_bet))
-                        if player1_action_stage3 == "Bet/Raise":
-                            if hash_key_stage3 in reward_table.keys():
-                                reward_table[hash_key_stage3][2] += int(total_pot_size - player1_bet)
-                                reward_count[hash_key_stage3][2] += 1
-                            else:
-                                gain_loss_stage3[2] = int(total_pot_size - player1_bet)
-                                gain_loss_stage3_count[2] = 1
-                        elif player1_action_stage3 == "Check/Call":
-                            if hash_key_stage3 in reward_table.keys():
-                                reward_table[hash_key_stage3][1] += int(total_pot_size - player1_bet)
-                                reward_count[hash_key_stage3][1] += 1
-                            else:
-                                gain_loss_stage3[1] = int(total_pot_size - player1_bet)
-                                gain_loss_stage3_count[1] = 1
-                        if player1_action_stage1 == "Bet/Raise":
-                            if hash_key_stage1 in reward_table.keys():
-                                reward_table[hash_key_stage1][2] += int(total_pot_size - player1_bet)
-                                reward_count[hash_key_stage1][2] += 1
-                            else:
-                                gain_loss_stage1[2] = int(total_pot_size - player1_bet)
-                                gain_loss_stage1_count[2] = 1
-                        elif player1_action_stage1 == "Check/Call":
-                            if hash_key_stage1 in reward_table.keys():
-                                reward_table[hash_key_stage1][1] += int(total_pot_size - player1_bet)
-                                reward_count[hash_key_stage1][1] += 1
-                            else:
-                                gain_loss_stage1[1] = int(total_pot_size - player1_bet)
-                                gain_loss_stage1_count[1] = 1
+                        if hash_key_stage3 in reward_table_stage3.keys():
+                            if player1_action_stage3 == "Check/Call":
+                                reward_table_stage3[hash_key_stage3][1] += int(total_pot_size - player1_bet)
+                                reward_count_stage3[hash_key_stage3][1] += 1
+                            elif player1_action_stage3 == "Bet/Raise":
+                                reward_table_stage3[hash_key_stage3][2] += int(total_pot_size - player1_bet)
+                                reward_count_stage3[hash_key_stage3][2] += 1
+                        else:
+                            if player1_action_stage3 == "Check/Call":
+                                gain_loss_table_stage3[1] = int(total_pot_size - player1_bet)
+                                gain_loss_count_stage3[1] += 1
+                            elif player1_action_stage3 == "Bet/Raise":
+                                gain_loss_table_stage3[2] = int(total_pot_size - player1_bet)
+                                gain_loss_count_stage3[2] += 1
                         if player1_action_stage2 == "Bet/Raise":
-                            if hash_key_stage2 in reward_table.keys():
-                                reward_table[hash_key_stage2][2] += int(total_pot_size - player1_bet)
-                                reward_count[hash_key_stage2][2] += 1
+                            if hash_key_stage2 in reward_table_stage2.keys():
+                                reward_table_stage2[hash_key_stage2][2] += int(total_pot_size - player1_bet)
+                                reward_count_stage2[hash_key_stage2][2] += 1
                             else:
-                                gain_loss_stage2[2] = int(total_pot_size - player1_bet)
-                                gain_loss_stage2_count[2] = 1
+                                gain_loss_count_stage2[2] += 1
+                                gain_loss_table_stage2[2] += int(total_pot_size - player1_bet)
+
                         elif player1_action_stage2 == "Check/Call":
-                            if hash_key_stage2 in reward_table.keys():
-                                reward_table[hash_key_stage2][1] += int(total_pot_size - player1_bet)
-                                reward_count[hash_key_stage2][1] += 1
+                            if hash_key_stage2 in reward_table_stage2.keys():
+                                reward_table_stage2[hash_key_stage2][1] += int(total_pot_size - player1_bet)
+                                reward_count_stage2[hash_key_stage2][1] += 1
                             else:
-                                gain_loss_stage2[1] = int(total_pot_size - player1_bet)
-                                gain_loss_stage2_count[1] = 1
+                                gain_loss_count_stage2[1] += 1
+                                gain_loss_table_stage2[1] += int(total_pot_size - player1_bet)
+
+                        if player1_action_stage1 == "Bet/Raise":
+                            if hash_key_stage1 in reward_table_stage1.keys():
+                                reward_table_stage1[hash_key_stage1][2] += int(total_pot_size - player1_bet)
+                                reward_count_stage1[hash_key_stage1][2] += 1
+                            else:
+                                gain_loss_count_stage1[2] += 1
+                                gain_loss_table_stage1[2] += int(total_pot_size - player1_bet)
+
+                        elif player1_action_stage1 == "Check/Call":
+                            if hash_key_stage1 in reward_table_stage1.keys():
+                                reward_table_stage1[hash_key_stage1][1] += int(total_pot_size - player1_bet)
+                                reward_count_stage1[hash_key_stage1][1] += 1
+                            else:
+                                gain_loss_count_stage1[1] += 1
+                                gain_loss_table_stage1[1] += int(total_pot_size - player1_bet)
 
                     else:
                         # print("Player 2 Wins!!",total_pot_size)
                         # print("Player 2 Gain!!",int(total_pot_size-player2_bet))
                         # print("Player 2 Wins!!", total_pot_size)
                         # print("Player 2 Gain!!", int(total_pot_size - player2_bet))
-                        if player1_action_stage3 == "Fold":
-                            if hash_key_stage3 in reward_table.keys():
-                                reward_table[hash_key_stage3][0] = -1 * int(player1_bet)
-                                reward_count[hash_key_stage3][0] += 1
-                            else:
-                                gain_loss_stage3[0] = -1 * int(player1_bet)
-                                gain_loss_stage3_count[0] += 1
-
-                        if player1_action_stage1 == "Bet/Raise":
-                            if hash_key_stage1 in reward_table.keys():
-                                reward_table[hash_key_stage1][2] += -1 * int(player1_bet)
-                                reward_count[hash_key_stage1][2] += 1
-                            else:
-                                gain_loss_stage1[2] = -1 * int(player1_bet)
-                                gain_loss_stage1_count[2] = 1
-                        elif player1_action_stage1 == "Check/Call":
-                            if hash_key_stage1 in reward_table.keys():
-                                reward_table[hash_key_stage1][1] += -1 * int(player1_bet)
-                                reward_count[hash_key_stage1][1] += 1
-                            else:
-                                gain_loss_stage1[1] = -1 * int(player1_bet)
-                                gain_loss_stage1_count[1] = 1
+                        if hash_key_stage3 in reward_table_stage3.keys():
+                            if player1_action_stage3 == "Check/Call":
+                                reward_table_stage3[hash_key_stage3][1] += -1 * int(player1_bet)
+                                reward_count_stage3[hash_key_stage3][1] += 1
+                            elif player1_action_stage3 == "Bet/Raise":
+                                reward_table_stage3[hash_key_stage3][2] += -1 * int(player1_bet)
+                                reward_count_stage3[hash_key_stage3][2] += 1
+                        else:
+                            if player1_action_stage3 == "Check/Call":
+                                gain_loss_table_stage3[1] = -1 * int(player1_bet)
+                                gain_loss_count_stage3[1] += 1
+                            elif player1_action_stage3 == "Bet/Raise":
+                                gain_loss_table_stage3[2] = -1 * int(player1_bet)
+                                gain_loss_count_stage3[2] += 1
 
                         if player1_action_stage2 == "Bet/Raise":
-                            if hash_key_stage2 in reward_table.keys():
-                                reward_table[hash_key_stage2][2] += -1 * int(player1_bet)
-                                reward_count[hash_key_stage2][2] += 1
+                            if hash_key_stage2 in reward_table_stage2.keys():
+                                reward_table_stage2[hash_key_stage2][2] += -1 * int(player1_bet)
+                                reward_count_stage2[hash_key_stage2][2] += 1
                             else:
-                                gain_loss_stage2[2] = -1 * int(player1_bet)
-                                gain_loss_stage2_count[2] = 1
+                                gain_loss_count_stage2[2] += 1
+                                gain_loss_table_stage2[2] += -1 * int(player1_bet)
+
                         elif player1_action_stage2 == "Check/Call":
-                            if hash_key_stage2 in reward_table.keys():
-                                reward_table[hash_key_stage2][1] += -1 * int(player1_bet)
-                                reward_count[hash_key_stage2][1] += 1
+                            if hash_key_stage2 in reward_table_stage2.keys():
+                                reward_table_stage2[hash_key_stage2][1] += -1 * int(player1_bet)
+                                reward_count_stage2[hash_key_stage2][1] += 1
                             else:
-                                gain_loss_stage2[1] = -1 * int(player1_bet)
-                                gain_loss_stage2_count[1] = 1
+                                gain_loss_count_stage2[1] += 1
+                                gain_loss_table_stage2[1] += -1 * int(player1_bet)
 
-                if hash_key_stage3 not in reward_table.keys():
-                    reward_table[hash_key_stage3] = gain_loss_stage3
-                    reward_count[hash_key_stage3] = gain_loss_stage3_count
+                        if player1_action_stage1 == "Bet/Raise":
+                            if hash_key_stage1 in reward_table_stage1.keys():
+                                reward_table_stage1[hash_key_stage1][2] += -1 * int(player1_bet)
+                                reward_count_stage1[hash_key_stage1][2] += 1
+                            else:
+                                gain_loss_count_stage1[2] += 1
+                                gain_loss_table_stage1[2] += -1 * int(player1_bet)
 
-            if hash_key_stage2 not in reward_table.keys():
-                reward_table[hash_key_stage2] = gain_loss_stage2
-                reward_count[hash_key_stage2] = gain_loss_stage2_count
+                        elif player1_action_stage1 == "Check/Call":
+                            if hash_key_stage1 in reward_table_stage1.keys():
+                                reward_table_stage1[hash_key_stage1][1] += -1 * int(player1_bet)
+                                reward_count_stage1[hash_key_stage1][1] += 1
+                            else:
+                                gain_loss_count_stage1[1] += 1
+                                gain_loss_table_stage1[1] += -1 * int(player1_bet)
 
-        if hash_key_stage1 not in reward_table.keys():
-            reward_table[hash_key_stage1] = gain_loss_stage1
-            reward_count[hash_key_stage1] = gain_loss_stage1_count
+                if hash_key_stage3 not in reward_table_stage3.keys():
+                    reward_table_stage3[hash_key_stage3] = gain_loss_table_stage3
+                    reward_count_stage3[hash_key_stage3] = gain_loss_count_stage3
+
+            if hash_key_stage2 not in reward_table_stage2.keys():
+                reward_table_stage2[hash_key_stage2] = gain_loss_table_stage2
+                reward_count_stage2[hash_key_stage2] = gain_loss_count_stage2
+
+        if hash_key_stage1 not in reward_table_stage1.keys():
+            reward_table_stage1[hash_key_stage1] = gain_loss_table_stage1
+            reward_count_stage1[hash_key_stage1] = gain_loss_count_stage1
         round_number += 1
-        print_progress(round_number, rounds, prefix='Progress:', suffix='Complete', bar_length=40)
+        print_progress(round_number, rounds, prefix='Progress:', suffix='Complete')
 
-    for key in reward_table.keys():
-        count_fold = reward_count[key][0]
-        count_check = reward_count[key][1]
-        count_bet = reward_count[key][2]
-        if count_fold!=0:
-            reward_table[key][0] = reward_table[key][0]/count_fold
-        if count_check!=0:
-            reward_table[key][1] = reward_table[key][1]/count_check
-        if count_bet!=0:
-            reward_table[key][2] = reward_table[key][2]/count_bet
-    return reward_table
+    for key in reward_table_stage3.keys():
+        count_fold = reward_count_stage3[key][0]
+        count_check = reward_count_stage3[key][1]
+        count_bet = reward_count_stage3[key][2]
+        if count_fold != 0:
+            reward_table_stage3[key][0] = reward_table_stage3[key][0] / count_fold
+        if count_check != 0:
+            reward_table_stage3[key][1] = reward_table_stage3[key][1] / count_check
+        if count_bet != 0:
+            reward_table_stage3[key][2] = reward_table_stage3[key][2] / count_bet
+
+    for key in reward_table_stage2.keys():
+        count_fold = reward_count_stage2[key][0]
+        count_check = reward_count_stage2[key][1]
+        count_bet = reward_count_stage2[key][2]
+        if count_fold != 0:
+            reward_table_stage2[key][0] = reward_table_stage2[key][0] / count_fold
+        if count_check != 0:
+            reward_table_stage2[key][1] = reward_table_stage2[key][1] / count_check
+        if count_bet != 0:
+            reward_table_stage2[key][2] = reward_table_stage2[key][2] / count_bet
+
+    for key in reward_table_stage1.keys():
+        count_fold = reward_count_stage1[key][0]
+        count_check = reward_count_stage1[key][1]
+        count_bet = reward_count_stage1[key][2]
+        if count_fold != 0:
+            reward_table_stage1[key][0] = reward_table_stage1[key][0] / count_fold
+        if count_check != 0:
+            reward_table_stage1[key][1] = reward_table_stage1[key][1] / count_check
+        if count_bet != 0:
+            reward_table_stage1[key][2] = reward_table_stage1[key][2] / count_bet
+
+    return reward_table_stage1,reward_table_stage2,reward_table_stage3
 
 def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_length=100):
     """
