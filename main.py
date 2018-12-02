@@ -40,7 +40,7 @@ def main(args):
   model.save(str(models_dirpath / "heuristic.model"))
 
   for i in range(1, 8):
-    reward_dict = self_play.run(500000, model)
+    reward_dict = self_play.run(100000, model)
 
     gc.collect()
 
@@ -61,7 +61,7 @@ def train(reward_dict):
 
   x_train, x_test, y_train, y_test = extract_train_and_test(reward_dict, input_shape)
 
-  steps_per_epoch = 10
+  steps_per_epoch = int(int(x_train.shape[0]) / 512)
   # steps_per_epoch / num_validation_steps == num_training_examples / num_testing_examples
   num_classes = 3
   epochs = 6
@@ -152,7 +152,7 @@ def create_model(input_shape, num_classes):
 
   model.compile(
     loss=keras.losses.mean_squared_error,
-    optimizer=keras.optimizers.Nadam(lr=0.02),
+    optimizer=keras.optimizers.Nadam(lr=0.1),
     metrics=['accuracy']
   )
 
