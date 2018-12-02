@@ -6,6 +6,7 @@ from pathlib import Path
 from numbers import Number
 from collections import Set, Mapping, deque
 from klepto.archives import dir_archive
+import tensorflow as tf
 import keras
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
@@ -18,11 +19,11 @@ import dealer
 import self_play
 
 def main(args):
-#  reward_dict = dealer.run(500000)
-# 
-#  gc.collect()
-# 
-#  save_obj(reward_dict, 'heuristic')
+  # reward_dict = dealer.run(50)
+  #
+  # gc.collect()
+  #
+  # save_obj(reward_dict, 'heuristic')
   reward_dict = {}
   with open("training_data/heuristic.pkl", "rb") as f:
       reward_dict = pickle.load(f)
@@ -70,7 +71,7 @@ def train(reward_dict):
 
   model = create_model(input_shape, num_classes)
 
-  tensor_board.set_model(model)
+  # tensor_board.set_model(model)
 
   model.fit(x_train,
             y_train,
@@ -79,7 +80,8 @@ def train(reward_dict):
             epochs=epochs,
             verbose=1,
             validation_data=(x_test, y_test),
-            callbacks=[tensor_board])
+            # callbacks=[tensor_board])
+            )
   score = model.evaluate(x_test, y_test, verbose=0)
   print('Test loss:', score[0])
   print('Test accuracy:', score[1])
@@ -89,11 +91,11 @@ def train(reward_dict):
 
 def extract_train_and_test(reward_dict, input_shape):
   x_all_raw, y_all_raw = extract_x_and_y(reward_dict)
-  # print('x_all_raw: ', x_all_raw.shape)
-  x_all_padded = pad_input(input_shape, x_all_raw)
-  # print('x_all_raw padded: ', x_all_raw.shape)
 
-  x_train, x_test, y_train, y_test = train_test_split(x_all_padded, y_all_raw, test_size=0.25)
+  x_train, x_test, y_train, y_test = train_test_split(x_all_raw, y_all_raw, test_size=0.25)
+  x_train = pad_input(input_shape, x_train)
+  x_test = pad_input(input_shape, x_test)
+
   return x_train, x_test, y_train, y_test
 
 def extract_x_and_y(reward_dict):
@@ -110,7 +112,11 @@ def pad_input(desired_input_shape, x):
   top_bottom_pad = desired_input_shape[2] - x.shape[3]
   top_pad = top_bottom_pad // 2
   bottom_pad = top_pad + (top_bottom_pad % 2)
-  x_padded = np.pad(x,  ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
+
+  tf_padding_dims = [[0, 0], [0, 0], [left_pad, right_pad], [top_pad, bottom_pad]]
+
+  # x_padded = np.pad(x,  ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
+  x_padded = tf.pad(x, tf_padding_dims)
   return x_padded
 
 def create_model(input_shape, num_classes):
