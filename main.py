@@ -76,17 +76,18 @@ def train(reward_dict):
   model = create_model(input_shape, num_classes)
 
   # tensor_board.set_model(model)
+  validation_steps = int(test_size / 512)
 
   model.fit(x_train,
             y_train,
             steps_per_epoch=steps_per_epoch,
-            validation_steps=test_size,
+            validation_steps=validation_steps,
             epochs=epochs,
             verbose=1,
             validation_data=(x_test, y_test),
             # callbacks=[tensor_board])
             )
-  score = model.evaluate(x_test, y_test, verbose=0)
+  score = model.evaluate(x_test, y_test, verbose=0, steps=validation_steps)
   print('Test loss:', score[0])
   print('Test accuracy:', score[1])
 
@@ -96,7 +97,7 @@ def train(reward_dict):
 def extract_train_and_test(reward_dict, input_shape, test_size):
   x_all_raw, y_all_raw = extract_x_and_y(reward_dict)
 
-  x_train, x_test, y_train, y_test = train_test_split(x_all_raw, y_all_raw, train_size=25000, test_size=test_size)
+  x_train, x_test, y_train, y_test = train_test_split(x_all_raw, y_all_raw, train_size=20000, test_size=test_size)
   x_train = pad_input(input_shape, x_train)
   x_test = pad_input(input_shape, x_test)
 
@@ -119,8 +120,8 @@ def pad_input(desired_input_shape, x):
 
   tf_padding_dims = [[0, 0], [0, 0], [left_pad, right_pad], [top_pad, bottom_pad]]
 
-  x_padded = np.pad(x,  ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
-  # x_padded = tf.pad(x, tf_padding_dims)
+  # x_padded = np.pad(x,  ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
+  x_padded = tf.pad(x, tf_padding_dims)
   return x_padded
 
 def create_model(input_shape, num_classes):
