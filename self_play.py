@@ -149,7 +149,7 @@ def run(rounds, model):
             top_pad = top_bottom_pad // 2
             bottom_pad = top_pad + (top_bottom_pad % 2)
             state_array_player1 = np.pad(state_array_player1, ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)), mode='constant')
-            y_player1 = Model.predict(model_player1,x=state_array_player1)
+            y_player1 = Model.predict(model1_player,x=state_array_player1)
             action_player1 = get_action(y_player1)
             if action_player1 == "Fold":
                 return "Player 2",stage_initial_potsize,0,0,action_player1,""
