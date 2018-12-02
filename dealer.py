@@ -9,7 +9,7 @@ def run(rounds):
   reward_count = dict()
   round_number=0
   print("running heuristic:")
-  print_progress(round_number, rounds, prefix='Progress:', suffix='Complete')
+  print_progress(round_number, rounds, prefix='Progress:', suffix='Complete', bar_length=40)
   while round_number < rounds:
       deck = Deck()
       Player_1 = Player()
@@ -518,7 +518,7 @@ def run(rounds):
           reward_table[hash_key_stage1] = gain_loss_table_stage1
           reward_count[hash_key_stage1] = gain_loss_count_stage1
       round_number += 1
-      print_progress(round_number, rounds, prefix='Progress:', suffix='Complete')
+      print_progress(round_number, rounds, prefix='Progress:', suffix='Complete', bar_length=40)
 
 
 

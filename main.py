@@ -1,6 +1,7 @@
 import sys
 import time
 import pickle
+from klepto.archives import dir_archive
 import keras
 from pathlib import Path
 from keras.models import Sequential
@@ -9,6 +10,7 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.callbacks import TensorBoard
 import numpy as np
 from sklearn.model_selection import train_test_split
+import gc
 
 import dealer
 import self_play
@@ -17,17 +19,28 @@ import self_play
 def main(args):
   reward_dict = dealer.run(500000)
 
+  gc.collect()
+
   save_obj(reward_dict, 'heuristic')
 
   model = train(reward_dict)
+
+  del reward_dict
+  gc.collect()
 
   models_dirpath = Path('models')
   model.save(str(models_dirpath / "heuristic.model"))
 
   for i in range(1, 8):
     reward_dict = self_play.run(500000, model)
+
+    gc.collect()
+
     save_obj(reward_dict, 'self_play_' + str(i))
     model = train(reward_dict)
+
+    del reward_dict
+    gc.collect()
 
     self_play_name = "self_play_" + str(i) + ".model"
     model.save(str(models_dirpath / self_play_name))
@@ -132,8 +145,10 @@ def create_model(input_shape, num_classes):
 
   return model
 
-def save_obj(obj, name):
-  with open('training_data/' + name + '.pkl', 'wb') as f:
-    pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+def save_obj(dict, name):
+  training_data_path_str = str(Path('training_data') / name)
+  heuristic_training_dict = dir_archive(name=training_data_path_str, dict=dict, cached=False)
+  heuristic_training_dict.dump()
 
 main(sys.argv)
