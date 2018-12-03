@@ -134,6 +134,7 @@ def betting(model1_player,flop1_array, flop2_array, flop3_array, turn_array, riv
                                  mode='constant')
     y_player1 = Model.predict(model1_player, x=state_array_player1)
     action_player1 = get_action(y_player1)
+    print("Player 1:" ,action_player1)
     if action_player1 == "Fold":
         return "Player 2", stage_initial_potsize, 0, 0, action_player1, ""
     elif action_player1 == "Check/Call":
@@ -160,6 +161,7 @@ def betting(model1_player,flop1_array, flop2_array, flop3_array, turn_array, riv
                                          mode='constant')
             y_player1 = Model.predict(model1_player, x=state_array_player1)
             action_player1 = get_action_position2(y_player1, "Bet/Raise")
+            print("Player 1:",action_player1)
             if action_player1 == "Fold":
                 return "Player 2", stage_initial_potsize, 0, 100, action_player1, action_player2
             else:
@@ -243,7 +245,7 @@ winner, pot_size, player1_new_bet, player2_new_bet, player1_action_stage1, playe
 total_pot_size += pot_size
 player1_bet += player1_new_bet
 player2_bet += player2_new_bet
-print("Player 1 Action",player1_action_stage1)
+
 if winner == "Player 1":
     print("Player 1 Wins!!",total_pot_size)
     print("Player 1 Gain!!",int(total_pot_size-player1_bet))
@@ -283,7 +285,7 @@ else:
     total_pot_size += pot_size
     player1_bet += player1_new_bet
     player2_bet += player2_new_bet
-    print("Player 1 Action",player1_action_stage2)
+
 
     if winner == "Player 1":
         print("Player 1 Wins!!", total_pot_size)
@@ -318,7 +320,7 @@ else:
         total_pot_size += pot_size
         player1_bet += player1_new_bet
         player2_bet += player2_new_bet
-        print("Player 1 Action",player1_action_stage3)
+
 
         if winner == "Player 1":
             print("Player 1 Wins!!", total_pot_size)
