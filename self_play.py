@@ -481,7 +481,7 @@ def run(rounds, model):
                 else:
                     final_score_player1 = evaluator.get_rank_class(evaluator._seven(player1_complete_hand))
                     final_score_player2 = evaluator.get_rank_class(evaluator._seven(player2_complete_hand))
-                    if final_score_player1 > final_score_player2:
+                    if final_score_player1 < final_score_player2:
                         # print("Player 1 Wins!!",total_pot_size)
                         # print("Player 1 Gain!!",int(total_pot_size - player1_bet))
                         if player1_action_stage3 == "Bet/Raise":
