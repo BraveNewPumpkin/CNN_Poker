@@ -5,17 +5,14 @@ class Player(object):
     bet_raise_percentage=0
     fold_percentage=0
 
-
     def make_bets(self,card_rank,possible_actions,round_pot_size):
         if len(possible_actions) == 3:
             rank = "Pair"
             if rank in card_rank or card_rank == "High Card":
-                bet_raise_percentage  = 100
                 check_call_percentage = 55
                 fold_percentage = 10
 
             else:
-                bet_raise_percentage=100
                 check_call_percentage=50
                 fold_percentage=5
 
@@ -30,7 +27,7 @@ class Player(object):
                     bet_amount = 50
                 else:
                     bet_amount=100
-                return "Bet/Raise",bet_amount
+                return "Bet",bet_amount
         elif len(possible_actions) == 2:
             rank = "Pair"
             if rank in card_rank or card_rank == "High Card":
@@ -43,7 +40,7 @@ class Player(object):
             if get_action <= fold_percentage:
                 return "Fold",0
             else:
-                if possible_actions[1] == "Bet/Raise":
+                if possible_actions[1] == "Bet":
                     toss_for_bet_size  = np.random.randint(0,100,1)
                     if toss_for_bet_size <=50:
                         return possible_actions[1],50

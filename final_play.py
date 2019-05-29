@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def get_action_position2(y_stage, other_player_action):
-    if other_player_action == "Bet/Raise":
+    if other_player_action == "Bet":
         out_of_bounds_index = 2
     index = 0
     max_gain_loss = y_stage[0]
@@ -21,7 +21,7 @@ def get_action_position2(y_stage, other_player_action):
     elif index == 1:
         return "Check/Call"
     else:
-        return "Bet/Raise"
+        return "Bet"
 
 
 def get_action(y_stage):
@@ -36,7 +36,7 @@ def get_action(y_stage):
     elif index == 1:
         return "Check/Call"
     else:
-        return "Bet/Raise"
+        return "Bet"
 
 
 def convert_pot_to_numpy(total_pot):
@@ -138,7 +138,7 @@ def betting(model1_player,flop1_array, flop2_array, flop3_array, turn_array, riv
     if action_player1 == "Fold":
         return "Player 2", stage_initial_potsize, 0, 0, action_player1, ""
     elif action_player1 == "Check/Call":
-        action_player2 = input("Select Action: Fold;Check/Call;Bet/Raise")
+        action_player2 = input("Select Action: Fold;Check/Call;Bet")
         if action_player2 == "Fold":
             return "Player 1", stage_initial_potsize, 0, 0, action_player1, action_player2
         elif action_player2 == "Check/Call":
@@ -160,7 +160,7 @@ def betting(model1_player,flop1_array, flop2_array, flop3_array, turn_array, riv
                                          ((0, 0), (0, 0), (left_pad, right_pad), (top_pad, bottom_pad)),
                                          mode='constant')
             y_player1 = Model.predict(model1_player, x=state_array_player1)
-            action_player1 = get_action_position2(y_player1, "Bet/Raise")
+            action_player1 = get_action_position2(y_player1, "Bet")
             print("Player 1:",action_player1)
             if action_player1 == "Fold":
                 return "Player 2", stage_initial_potsize, 0, 100, action_player1, action_player2
@@ -168,14 +168,14 @@ def betting(model1_player,flop1_array, flop2_array, flop3_array, turn_array, riv
                 return "", stage_initial_potsize + 100, 100, 100, action_player1, action_player2
     else:
         stage_initial_potsize += 100
-        action_player2 = input("Select Action: Fold;Check/Call;Bet/Raise")
+        action_player2 = input("Select Action: Fold;Check/Call;Bet")
         if action_player2 == "Fold":
             return "Player 1", stage_initial_potsize, 100, 0, action_player1, action_player2
         else:
             return "", stage_initial_potsize + 100, 100, 100, action_player1, action_player2
 
 model_path = Path('models')
-model = models.load_model("/Users/mohit/Desktop/test/self_play_7.model")
+model = models.load_model("models/self_play_4.model")
 
 deck = Deck()
 flop = deck.draw(3)
@@ -334,7 +334,7 @@ else:
         else:
             final_score_player1 = evaluator.get_rank_class(evaluator._seven(player1_complete_hand))
             final_score_player2 = evaluator.get_rank_class(evaluator._seven(player2_complete_hand))
-            if final_score_player1 > final_score_player2:
+            if final_score_player1 < final_score_player2:
                 print("Player 1 Wins!!",total_pot_size)
                 print("Player 1 Gain!!",int(total_pot_size - player1_bet))
 
